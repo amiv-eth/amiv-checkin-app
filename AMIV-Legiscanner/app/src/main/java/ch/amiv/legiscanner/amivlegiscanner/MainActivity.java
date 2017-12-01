@@ -24,30 +24,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button btn = (Button) findViewById(R.id.button);
+        Button btn = (Button) findViewById(R.id.button_mode_api);
         btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                
+
             }
         });
-
-        TextView txtView = (TextView) findViewById(R.id.txtContent);
-        BarcodeDetector detector =
-                new BarcodeDetector.Builder(getApplicationContext())
-                        .setBarcodeFormats(Barcode.DATA_MATRIX | Barcode.QR_CODE)
-                        .build();
-
-        if(!detector.isOperational()){
-            txtView.setText("Could not set up the detector!");
-            return;
-        }
-
-        //Frame frame = new Frame.Builder().setBitmap(myBitmap).build();
-        SparseArray<Barcode> barcodes = detector.detect(frame);
-
-        Barcode thisCode = barcodes.valueAt(0);
-        TextView txtView = (TextView) findViewById(R.id.txtContent);
-        txtView.setText(thisCode.rawValue);
     }
 }
