@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">AMIV LegiScanner</string>
+    <string name="scan">SCAN</string>
 </resources>
