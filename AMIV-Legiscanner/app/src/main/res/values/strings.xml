@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">AMIV LegiScanner</string>
     <string name="scan">SCAN</string>
+    <string name="enter_event_pin">Enter Event PIN</string>
+    <string name="check_in">Check-In</string>
+    <string name="check_out">Check-Out</string>
 </resources>
