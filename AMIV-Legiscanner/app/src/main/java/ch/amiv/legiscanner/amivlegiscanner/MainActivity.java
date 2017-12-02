@@ -11,13 +11,17 @@ import com.android.volley.toolbox.Volley;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import org.w3c.dom.Text;
+
 public class MainActivity extends AppCompatActivity {
-    public static String url = "http://www.google.com";
-    EditText mPinField;
-    int mCurrentPin;
+    public static String CurrentPin;
     boolean mWaitingOnServer = false;
+
+    EditText mPinField;
+    TextView mInvalidPinLabel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         mPinField = (EditText)findViewById(R.id.PinField);
+        mInvalidPinLabel = (TextView) findViewById(R.id.InvalidPinLabel);
     }
 
     @Override
@@ -33,26 +38,31 @@ public class MainActivity extends AppCompatActivity {
 
         mWaitingOnServer = false;
         mPinField.setText("");  //clear pin field
+        mInvalidPinLabel.setVisibility(View.INVISIBLE);
     }
 
-    public void pinSubmit(View view)
+    /**
+     * Submit a pin for an event to the server and act on response accondingly, ie open scanActivity if valid, or request pin entry again
+     * @param view
+     */
+    public void SubmitPin(View view)
     {
         if(mWaitingOnServer || "".equals(mPinField.getText().toString()))  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
         mWaitingOnServer = true;
 
-        mCurrentPin = Integer.parseInt(mPinField.getText().toString());
-/*
-        Log.e("pin", "event pin submitted to server: " + mCurrentPin);
+        CurrentPin = mPinField.getText().toString();
+
+        Log.e("pin", "event pin submitted to server: " + CurrentPin);
         RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url + "?pin=" + mCurrentPin,
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, SettingsActivity.GetServerURL(getApplicationContext()) + "?pin=" + CurrentPin,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
                         // Display the first 500 characters of the response string.
-                        Log.e("response", "Response from server: " + response.substring(0,500) + " on event pin: " + mCurrentPin);
+                        Log.e("response", "Response from server: " + response.substring(0,500) + " on event pin: " + CurrentPin);
 
                         if(response == "200"){
                             StartScanActivity();
@@ -65,20 +75,25 @@ public class MainActivity extends AppCompatActivity {
                 public void onErrorResponse(VolleyError error) {
                     mWaitingOnServer = false;
                     Log.e("response", "Server sent back error: " + error);
+                    mInvalidPinLabel.setVisibility(View.VISIBLE);
                 }
         });
         // Add the request to the RequestQueue.
         queue.add(stringRequest);
-        */
 
-        StartScanActivity();
+        StartScanActivity();    //NOTE: Remove when server response is set up!
     }
 
     private void StartScanActivity()
     {
         Intent intent = new Intent(this, ScanActivity.class);
-        intent.putExtra(ScanActivity.PIN, mCurrentPin);
-        intent.putExtra(ScanActivity.url, url);
+        startActivity(intent);
+    }
+
+
+    public void StartSettingsActivity(View view)
+    {
+        Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
     }
 }
