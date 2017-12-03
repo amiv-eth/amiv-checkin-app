@@ -2,14 +2,12 @@ package ch.amiv.legiscanner.amivlegiscanner;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.graphics.Camera;
-import android.support.v4.app.ActivityCompat;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -18,7 +16,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.view.View.OnKeyListener;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -32,10 +29,16 @@ import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ScanActivity extends AppCompatActivity {
     boolean mWaitingOnServer = false;
     boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
+    boolean mCheckInOnLastBarcode = true;
+    String mLastBarcodeScanned = "00000000";
+    boolean mAllowNextBarcode = true;
+
 
     //-----UI Elements----
     Switch mCheckInSwitch;
@@ -47,12 +50,10 @@ public class ScanActivity extends AppCompatActivity {
     Button mSubmitLeginrButton;
 
 
-    BarcodeDetector barcodeDetector;
-    CameraSource cameraSource;
-
-    SurfaceView cameraView;
-    Camera camera;
-    TextView barcodeInfo;
+    BarcodeDetector mBarcodeDetector;
+    CameraSource mCameraSource;
+    SurfaceView mCameraView;
+    TextView mBarcodeInfo;
 
 
     @Override
@@ -74,19 +75,18 @@ public class ScanActivity extends AppCompatActivity {
         mServerErrorLabel = (TextView)findViewById(R.id.ServerErrorLabel);
 
         //----Setting up Camera and barcode tracking with callbacks------
-        cameraView = (SurfaceView)findViewById(R.id.CameraView);
-        barcodeInfo = (TextView)findViewById(R.id.BarcodeOutput);
+        mCameraView = (SurfaceView)findViewById(R.id.CameraView);
+        mBarcodeInfo = (TextView)findViewById(R.id.BarcodeOutput);
 
-        barcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build();
-        CameraSource.Builder camBuilder= new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480);
+        mBarcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.CODE_39).build();                 //IMPORTANT: Set the correct format for the barcode reader, can choose all formats but will be slower
+        CameraSource.Builder camBuilder= new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(640, 480);
         camBuilder.setAutoFocusEnabled(true);
-        //cameraSource = new CameraSource.Builder(this, barcodeDetector).setRequestedPreviewSize(640, 480).build();
-        cameraSource = camBuilder.build();
+        //mCameraSource = new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(640, 480).build();
+        mCameraSource = camBuilder.build();
 
-        cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+        mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
-                Log.e("barcode", "SurfaceCreated()");
                 try {
 
                     if ( ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA ) != PackageManager.PERMISSION_GRANTED ) {
@@ -94,43 +94,62 @@ public class ScanActivity extends AppCompatActivity {
                         //ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
                     }
                     else
-                        cameraSource.start(cameraView.getHolder());
+                        mCameraSource.start(mCameraView.getHolder());
                 } catch (IOException ie) {
-                    Log.e("CAMERA SOURCE", ie.getMessage());
+                    Log.e("mCameraSource", ie.getMessage());
                 }
             }
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                Log.e("barcode", "surfaceChanged()");
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                Log.e("barcode", "surfaceDestroyed()");
-                cameraSource.stop();
+                mCameraSource.stop();
             }
         });
 
-        barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
+        mBarcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
             @Override
             public void release() {
-                Log.e("barcode", "barcodeDetector release()");
-
             }
 
             @Override
-            public void receiveDetections(Detector.Detections<Barcode> detections) {
+            public void receiveDetections(Detector.Detections<Barcode> detections) {    //This is called every frame or so and will give the detected barcodes
                 final SparseArray<Barcode> barcodes = detections.getDetectedItems();
 
-                Log.e("barcode", "detecting barcodes: " + barcodes.size());
+                if (barcodes.size() == 0)
+                    return;
 
+                //Only allow another barcode if: time since the last scan has passed, the barcode is different or the checkmode has changed
+                if((mAllowNextBarcode && (!mLastBarcodeScanned.equals(barcodes.valueAt(0).displayValue) || mCheckInOnLastBarcode != mIsCheckingIn))) {
+                    Log.e("barcodeDetect", "detected barcode: " + barcodes.valueAt(0).displayValue);
 
-                if (barcodes.size() != 0) {
-                    Log.e("barcodeDetect", "detecting barcodes: " + barcodes.size());
-                    barcodeInfo.post(new Runnable() {    // Use the post method of the TextView
+                    mAllowNextBarcode = false;  //prevent the same barcode being submitted in the next frame until this is set to true again in the postDelayed call
+                    mLastBarcodeScanned = barcodes.valueAt(0).displayValue;
+                    mCheckInOnLastBarcode = mIsCheckingIn;
+
+                    mBarcodeInfo.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
                         public void run() {
-                            barcodeInfo.setText(barcodes.valueAt(0).displayValue);
+                            SubmitLegiNrToServer(barcodes.valueAt(0).displayValue);
+
+                            mBarcodeInfo.setText(barcodes.valueAt(0).displayValue);
+
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
+
+                                @Override
+                                public void run() {
+                                    Log.e("barcodeDetect", "Next barcode scan possible");
+
+                                    mAllowNextBarcode = true;
+                                    mBarcodeInfo.setText(R.string.no_barcode_detected); //Reset UI
+                                    mValidLabel.setVisibility(View.INVISIBLE);
+                                    mInvalidLabel.setVisibility(View.INVISIBLE);
+                                    mServerErrorLabel.setVisibility(View.INVISIBLE);
+                                }
+                            }, 2500);//in millisecs
                         }
                     });
                 }
@@ -159,50 +178,62 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void SubmitLegiNrToServer(String leginr)
     {
-        SetWaitingOnServer(true);
+        final String formattedLeginr;
+        if(leginr.charAt(0) == 'S')         //Remove prefix S from barcode if needed
+            formattedLeginr = leginr.substring(1);
+        else
+            formattedLeginr = leginr;
+
+        SetWaitingOnServer(true);       //Clear UI
         mValidLabel.setVisibility(View.INVISIBLE);
         mInvalidLabel.setVisibility(View.INVISIBLE);
         mServerErrorLabel.setVisibility(View.INVISIBLE);
 
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out") + ", URL used: " + SettingsActivity.GetServerURL(getApplicationContext()));
+
+        //----POST Request----
         RequestQueue queue = Volley.newRequestQueue(this);
+        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(getApplicationContext()) + "/mutate", new Response.Listener<String>() {
 
+                @Override
+                public void onResponse(String response) {
+                    SetWaitingOnServer(false);
+                    Log.e("postrequest", "Response from server: " + response.substring(0,500) + " on event pin: " + MainActivity.CurrentPin);
 
-        Log.e("response", "URL used: " + SettingsActivity.GetServerURL(getApplicationContext()) + "?pin=" + MainActivity.CurrentPin + "&legi=" + leginr + "&checkin=" + mIsCheckingIn);
-
-        // Request a string response from the provided URL.
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, SettingsActivity.GetServerURL(getApplicationContext()) + "?pin=" + MainActivity.CurrentPin + "&legi=" + leginr + "&checkin=" + mIsCheckingIn,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        mWaitingOnServer = false;
-                        SetWaitingOnServer(false);
-
-
-                        // Display the first 500 characters of the response string.
-                        Log.e("response", "Response from server: " + response.substring(0,500) + " on event pin: " + MainActivity.CurrentPin);
-
-                        if(response == "200")
-                        {
-                            mValidLabel.setVisibility(View.VISIBLE);
-                            Log.e("response", "Legi nr valid");
-                        }
-                        else
-                        {
-                            mInvalidLabel.setVisibility(View.VISIBLE);
-                            Log.e("response", "Legi nr NOT valid");
-                        }
+                    if(response.equals("Checked-IN")) {
+                        mValidLabel.setVisibility(View.VISIBLE);
+                        //mValidLabel.setText("Insert response from server");
+                        Log.e("postrequest", "Legi nr valid");
                     }
-                },
-                new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        SetWaitingOnServer(false);
+                    else {
                         mInvalidLabel.setVisibility(View.VISIBLE);
-                        Log.e("response", "Server sent back error: " + error);
+                        //mValidLabel.setText("Insert response from server");
+                        Log.e("postrequest", "Legi nr NOT valid");
                     }
-                });
-        // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+                }
+            },
+            new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    SetWaitingOnServer(false);
+                    mServerErrorLabel.setVisibility(View.VISIBLE);
+                    Log.e("postrequest", "Server sent back error: " + error);
+                }
+            }
+            ) {
+            @Override
+            protected Map<String, String> getParams() {
+                Log.e("postrequest", "Params Set: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out"));
+
+                Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
+                params.put("pin", MainActivity.CurrentPin);
+                params.put("info", formattedLeginr);
+                params.put("checkmode", (mIsCheckingIn ? "in" : "out"));
+
+                return params;
+            }
+        };
+        queue.add(postRequest);
     }
 
     /**

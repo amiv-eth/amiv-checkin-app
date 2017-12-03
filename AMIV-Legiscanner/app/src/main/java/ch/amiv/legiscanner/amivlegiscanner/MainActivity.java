@@ -20,6 +20,9 @@ import android.widget.Toast;
 
 import org.w3c.dom.Text;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity {
     public static String CurrentPin;
     boolean mWaitingOnServer = false;
@@ -82,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
         CurrentPin = mPinField.getText().toString();
 
         Log.e("pin", "event pin submitted to server: " + CurrentPin);
-        RequestQueue queue = Volley.newRequestQueue(this);
+        /*RequestQueue queue = Volley.newRequestQueue(this);
 
         // Request a string response from the provided URL.
         StringRequest stringRequest = new StringRequest(Request.Method.GET, SettingsActivity.GetServerURL(getApplicationContext()) + "?pin=" + CurrentPin,
@@ -107,9 +110,48 @@ public class MainActivity extends AppCompatActivity {
                 }
         });
         // Add the request to the RequestQueue.
-        queue.add(stringRequest);
+        queue.add(stringRequest);*/
 
-        StartScanActivity();    //NOTE: Remove when server response is set up!
+
+
+        //----POST Request----
+        RequestQueue queue = Volley.newRequestQueue(this);
+        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(getApplicationContext()) + "/checkpin", new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.e("response", "Response from server: " + response + " on event pin: " + CurrentPin);
+
+                mWaitingOnServer = false;
+
+                if(response.equals("PIN valid.")){  //HACK should check for code 200 instead but this works
+                    StartScanActivity();
+                }
+                else
+                    mInvalidPinLabel.setVisibility(View.VISIBLE);
+            }
+        },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("postrequest", "Server sent back error: " + error);
+                    }
+                }
+        ) {
+            @Override
+            protected Map<String, String> getParams() {
+                //Log.e("postrequest", "Params Set: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out"));
+
+                Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
+                params.put("pin", MainActivity.CurrentPin);
+
+                return params;
+            }
+        };
+        queue.add(postRequest);
+
+
+        //StartScanActivity();    //NOTE: Remove when server response is set up!
     }
 
     private void StartScanActivity()

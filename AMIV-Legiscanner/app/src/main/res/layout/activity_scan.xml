@@ -35,7 +35,7 @@
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginBottom="115dp"
-            android:text="No Barcode Detected"
+            android:text="@string/no_barcode_detected"
             android:textColor="@android:color/white"
             android:textSize="14sp" />
 
@@ -136,8 +136,8 @@
         android:id="@+id/InvalidLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:layout_marginStart="28dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="56dp"
         android:text="Invalid"
         android:textAlignment="center"
         android:textColor="@android:color/holo_red_dark"

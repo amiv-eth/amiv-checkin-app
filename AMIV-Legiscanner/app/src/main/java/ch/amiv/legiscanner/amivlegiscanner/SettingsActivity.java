@@ -13,7 +13,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static SharedPreferences SHARED_PREFS;
     private static String SHARED_PREFS_KEY = "com.amivlegiscanner.app";
     private static String URL_PREF_KEY = "com.amivlegiscanner.app.serverurl";
-    private static String DEF_URL = "https://www.amiv.ethz.ch/";
+    private static String DEF_URL = "https://www.amiv.ethz.ch/";    //NOTE: Set default value before build
 
     EditText mUrlField;
 
