@@ -21,9 +21,8 @@
             android:id="@+id/CameraView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentTop="false"
-            android:layout_centerHorizontal="false"
-            android:layout_marginTop="0dp"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
@@ -34,10 +33,11 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="115dp"
+            android:layout_marginBottom="69dp"
             android:text="@string/no_barcode_detected"
             android:textColor="@android:color/white"
-            android:textSize="14sp" />
+            android:textSize="14sp"
+            android:visibility="invisible" />
 
     </RelativeLayout>
 
@@ -110,14 +110,16 @@
         android:id="@+id/ValidLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="1dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
         android:text="Valid"
         android:textAlignment="center"
         android:textColor="@android:color/holo_green_light"
         android:textSize="48sp"
         android:visibility="invisible"
         app:layout_constraintBaseline_toBaselineOf="@+id/ServerErrorLabel"
-        app:layout_constraintEnd_toEndOf="@+id/PleaseWaitLabel" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
         android:id="@+id/ServerErrorLabel"
@@ -136,31 +138,35 @@
         android:id="@+id/InvalidLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="348dp"
         android:layout_marginStart="56dp"
+        android:layout_marginTop="8dp"
         android:text="Invalid"
         android:textAlignment="center"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="48sp"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@+id/ServerErrorLabel" />
+        app:layout_constraintStart_toStartOf="@+id/ServerErrorLabel"
+        app:layout_constraintTop_toTopOf="@+id/CheckInSwitch"
+        app:layout_constraintVertical_bias="1.0" />
 
     <TextView
         android:id="@+id/PleaseWaitLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="7dp"
+        android:layout_marginBottom="36dp"
         android:text="Please Wait..."
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="18sp"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/ServerErrorLabel"
+        app:layout_constraintBottom_toBottomOf="@+id/relativeLayout"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent" /><![CDATA[
 
 
     >
 
+]]>
 </android.support.constraint.ConstraintLayout>

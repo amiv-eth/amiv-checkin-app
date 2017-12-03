@@ -127,14 +127,18 @@ public class MainActivity extends AppCompatActivity {
                 if(response.equals("PIN valid.")){  //HACK should check for code 200 instead but this works
                     StartScanActivity();
                 }
-                else
+                else {
                     mInvalidPinLabel.setVisibility(View.VISIBLE);
+                    mInvalidPinLabel.setText(R.string.invalid_pin);
+                }
             }
         },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.e("postrequest", "Server sent back error: " + error);
+                        mInvalidPinLabel.setVisibility(View.VISIBLE);
+                        mInvalidPinLabel.setText(R.string.invalid_url);
                     }
                 }
         ) {

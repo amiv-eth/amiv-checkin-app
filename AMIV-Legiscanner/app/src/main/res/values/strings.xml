@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AMIV LegiScanner</string>
+    <string name="app_name">AMIV Legi Scanner</string>
     <string name="scan">SCAN</string>
     <string name="check_in">Check-In</string>
     <string name="check_out">Check-Out</string>
@@ -79,4 +79,6 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="no_barcode_detected">No Barcode Detected</string>
+    <string name="invalid_pin">Invalid PIN</string>
+    <string name="invalid_url">Invalid URL</string>
 </resources>
