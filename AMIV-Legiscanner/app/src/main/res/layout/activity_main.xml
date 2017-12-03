@@ -71,7 +71,6 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:text="Invalid PIN"
-        android:textColor="@color/common_signin_btn_dark_text_disabled"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
