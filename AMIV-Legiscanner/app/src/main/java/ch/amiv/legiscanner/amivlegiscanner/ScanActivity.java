@@ -198,9 +198,9 @@ public class ScanActivity extends AppCompatActivity {
                 @Override
                 public void onResponse(String response) {
                     SetWaitingOnServer(false);
-                    Log.e("postrequest", "Response from server: " + response.substring(0,500) + " on event pin: " + MainActivity.CurrentPin);
+                    Log.e("postrequest", "Response from server: " + response + " on event pin: " + MainActivity.CurrentPin);
 
-                    if(response.equals("Checked-IN")) {
+                    if(response.equals("Checked-IN") || response.equals("Checked-OUT")) {   //XXXXXX Check with server response code 200, also check that string matches with server code
                         mValidLabel.setVisibility(View.VISIBLE);
                         //mValidLabel.setText("Insert response from server");
                         Log.e("postrequest", "Legi nr valid");
