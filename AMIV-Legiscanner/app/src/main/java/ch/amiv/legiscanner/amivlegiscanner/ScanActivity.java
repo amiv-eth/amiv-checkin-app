@@ -17,6 +17,7 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -28,7 +29,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import java.io.IOException;
+import java.io.IOException; 
 import java.util.HashMap;
 import java.util.Map;
 
@@ -196,31 +197,36 @@ public class ScanActivity extends AppCompatActivity {
         StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(getApplicationContext()) + "/mutate", new Response.Listener<String>() {
 
                 @Override
-                public void onResponse(String response) {
-                    SetWaitingOnServer(false);
-                    Log.e("postrequest", "Response from server: " + response + " on event pin: " + MainActivity.CurrentPin);
-
-                    if(response.equals("Checked-IN") || response.equals("Checked-OUT")) {   //XXXXXX Check with server response code 200, also check that string matches with server code
-                        mValidLabel.setVisibility(View.VISIBLE);
-                        //mValidLabel.setText("Insert response from server");
-                        Log.e("postrequest", "Legi nr valid");
-                    }
-                    else {
-                        mInvalidLabel.setVisibility(View.VISIBLE);
-                        //mValidLabel.setText("Insert response from server");
-                        Log.e("postrequest", "Legi nr NOT valid");
-                    }
-                }
+                public void onResponse(String response) {}
             },
             new Response.ErrorListener() {
                 @Override
-                public void onErrorResponse(VolleyError error) {
-                    SetWaitingOnServer(false);
-                    mServerErrorLabel.setVisibility(View.VISIBLE);
-                    Log.e("postrequest", "Server sent back error: " + error);
-                }
+                public void onErrorResponse(VolleyError error) {}
+            }) {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                final NetworkResponse nr = response;
+                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                    public void run() {
+                        SetUIFromResponse(nr.statusCode, new String(nr.data));
+                    }
+                });
+
+                return super.parseNetworkResponse(response);
             }
-            ) {
+
+            @Override
+            protected VolleyError parseNetworkError(VolleyError volleyError) {
+                final VolleyError ve = volleyError;
+                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                    public void run() {
+                        SetUIFromResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
+                    }
+                });
+
+                return super.parseNetworkError(volleyError);
+            }
+
             @Override
             protected Map<String, String> getParams() {
                 Log.e("postrequest", "Params Set: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out"));
@@ -235,6 +241,22 @@ public class ScanActivity extends AppCompatActivity {
         };
         queue.add(postRequest);
     }
+
+    private void SetUIFromResponse(int statusCode, String responseText)
+    {
+        SetWaitingOnServer(false);
+        Log.e("postrequest", "Response from server: " + statusCode + " with text: " + responseText + " on event pin: " + MainActivity.CurrentPin);
+
+        if(statusCode == 200) {
+            mValidLabel.setVisibility(View.VISIBLE);
+            mValidLabel.setText(responseText);
+        }
+        else {
+            mInvalidLabel.setVisibility(View.VISIBLE);
+            mInvalidLabel.setText(responseText);
+        }
+    }
+
 
     /**
      * Use this to set UI accordingly and prevent a second request being sent before the first one returns

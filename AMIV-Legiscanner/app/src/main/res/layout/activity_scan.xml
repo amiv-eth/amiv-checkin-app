@@ -88,7 +88,7 @@
         android:layout_marginTop="8dp"
         android:ems="10"
         android:hint="Legi Nr"
-        android:inputType="number"
+        android:inputType="text"
         android:textColor="@android:color/white"
         app:layout_constraintEnd_toStartOf="@+id/SubmitLegiNrButton"
         app:layout_constraintStart_toStartOf="parent"
@@ -125,14 +125,14 @@
         android:id="@+id/ServerErrorLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
         android:text="Server Error"
         android:textAlignment="center"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="48sp"
         android:visibility="invisible"
         app:layout_constraintBaseline_toBaselineOf="@+id/InvalidLabel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="@+id/CrossImage" />
 
     <TextView
         android:id="@+id/InvalidLabel"
@@ -164,6 +164,30 @@
         app:layout_constraintBottom_toBottomOf="@+id/relativeLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" /><![CDATA[
+
+    <ImageView
+        android:id="@+id/CrossImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_marginTop="30dp"
+        android:tint="@android:color/holo_red_dark"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ServerErrorLabel"
+        app:srcCompat="@drawable/cross_75alhpa" />
+
+    <ImageView
+        android:id="@+id/TickImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:tint="@android:color/holo_green_light"
+        app:layout_constraintStart_toStartOf="@+id/CrossImage"
+        app:layout_constraintTop_toTopOf="@+id/CrossImage"
+        app:srcCompat="@drawable/tick_75alpha" /><![CDATA[
 
 
     >
