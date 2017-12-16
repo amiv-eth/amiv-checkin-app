@@ -1,5 +1,10 @@
 package ch.amiv.legiscanner.amivlegiscanner;
 
+/**
+ * Author: Roger Barton, rbarton@ethz.ch
+ * Date Created: 2/12/17
+ */
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,7 +18,7 @@ public class SettingsActivity extends AppCompatActivity {
     private static SharedPreferences SHARED_PREFS;
     private static String SHARED_PREFS_KEY = "com.amivlegiscanner.app";
     private static String URL_PREF_KEY = "com.amivlegiscanner.app.serverurl";
-    private static String DEF_URL = "https://www.amiv.ethz.ch/";    //NOTE: Set default value before build
+    private static String DEF_URL = "https://amiv-checkin.ethz.ch";    //NOTE: Set default value before build
 
     EditText mUrlField;
 
