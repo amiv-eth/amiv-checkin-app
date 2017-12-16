@@ -22,12 +22,16 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.VolleyLog;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.vision.CameraSource;
@@ -35,7 +39,10 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import java.io.IOException; 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -168,7 +175,6 @@ public class ScanActivity extends AppCompatActivity {
 
                                 @Override
                                 public void run() {
-                                    Log.e("barcodeDetect", "Next barcode scan possible");
                                     mCanClearResponse = true;
                                 }
                             }, NEXT_LEGI_DELAY);
@@ -243,8 +249,7 @@ public class ScanActivity extends AppCompatActivity {
             }
 
             @Override
-            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!
-                Log.e("postrequest", "Params Set: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out"));
+            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!`
 
                 Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
                 params.put("pin", MainActivity.CurrentPin);
@@ -285,6 +290,8 @@ public class ScanActivity extends AppCompatActivity {
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
         }
+
+        //GetStats();
     }
 
     private void ResetResponseUI ()
@@ -306,5 +313,57 @@ public class ScanActivity extends AppCompatActivity {
     {
         mWaitingOnServer = isWaiting;
         mWaitLabel.setVisibility((isWaiting ? View.VISIBLE : View.INVISIBLE));
+    }
+
+
+    //-----Updating Stats-----   //STILL IN DEVELOPMENT
+    /**
+     * Will Get the list of people for the event from the server, with stats.
+     */
+    private void GetStats ()
+    {
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(getApplicationContext()) + "/checkin_update_data");
+
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(getApplicationContext()) + "/checkin_update_data",
+                null, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.e("postrequest", "JSON file response received.");
+                    }
+                }, new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("postrequest", "Response from server for JSON data: " + error.networkResponse.statusCode + " with text: " + new String(error.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
+                    }
+                })
+        {
+            @Override
+            protected VolleyError parseNetworkError(VolleyError volleyError) {  //see comments at parseNetworkResponse()
+                Log.e("postrequest", "parseNetworkError Response from server for JSON data: " + volleyError.networkResponse.statusCode + " with text: " + new String(volleyError.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
+
+                final VolleyError ve = volleyError;
+                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                    public void run() {
+                        //AddFunctionHERE(ve.networkResponse.statusCode, new String(ve.networkResponse.data)); //add function on main thread
+                    }
+                });
+
+                return super.parseNetworkError(volleyError);
+            }
+
+
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                HashMap<String, String> headers = new HashMap<String, String>();
+
+                headers.put("pin", MainActivity.CurrentPin);
+                return headers;
+            }
+        };
+
+        //Add function to update stats/list of people
+
+        RequestQueue queue = Volley.newRequestQueue(this);  //Add the request to the queue so it can be sent
+        queue.add(req);
     }
 }

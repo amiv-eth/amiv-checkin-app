@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         else if(statusCode == 403)//invalid pin
         {
             mInvalidPinLabel.setVisibility(View.VISIBLE);
-            mInvalidPinLabel.setText(R.string.invalid_pin);
+            mInvalidPinLabel.setText(responseText);
         }
         else                    //Other error
         {
