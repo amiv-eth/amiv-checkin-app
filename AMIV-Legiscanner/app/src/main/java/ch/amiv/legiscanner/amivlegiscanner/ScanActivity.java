@@ -39,6 +39,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -67,6 +68,10 @@ public class ScanActivity extends AppCompatActivity {
     ImageView mTickImage;
     ImageView mCrossImage;
     ImageView mBGTint;
+
+    //Stats UI
+    TextView mAttendanceStatLabel;
+    TextView mRemainingStatLabel;
 
     //-----Barcode Scanning Related----
     BarcodeDetector mBarcodeDetector;
@@ -97,6 +102,9 @@ public class ScanActivity extends AppCompatActivity {
         mBGTint = (ImageView)findViewById(R.id.BackgroundTint);
         mBGTint.setAlpha(0.4f);
 
+        mAttendanceStatLabel = (TextView)findViewById(R.id.AttendanceStatLabel);
+        mRemainingStatLabel = (TextView)findViewById(R.id.RemainingStatLabel);
+
         RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.CameraLayout);
         mCameraLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -106,7 +114,6 @@ public class ScanActivity extends AppCompatActivity {
                     ResetResponseUI();
                 }
             }
-
         });
 
         //----Setting up Camera and barcode tracking with callbacks------
@@ -291,7 +298,7 @@ public class ScanActivity extends AppCompatActivity {
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
         }
 
-        //GetStats();
+        GetStats();
     }
 
     private void ResetResponseUI ()
@@ -329,6 +336,21 @@ public class ScanActivity extends AppCompatActivity {
                     @Override
                     public void onResponse(JSONObject response) {
                         Log.e("postrequest", "JSON file response received.");
+
+                        try {
+                            // Parsing json object response
+                            int totalSignups = response.getInt("Total Signups");
+                            int currentAttendance = response.getInt("Current Attendance");
+                            mRemainingStatLabel.setText("" + (totalSignups - currentAttendance));
+                            mAttendanceStatLabel.setText("" + currentAttendance);
+
+                            JSONArray signups = response.getJSONArray("signups");
+                            Log.e("postrequest", "length of signups: " + signups.length() + "   first persons name: " + ((JSONObject)signups.get(0)).getString("firstname"));
+                        }
+                        catch (JSONException e) {
+                            Log.e("postrequest", "Error parsing received JsonObject in GetStats().");
+                            e.printStackTrace();
+                        }
                     }
                 }, new Response.ErrorListener() {
                     @Override
