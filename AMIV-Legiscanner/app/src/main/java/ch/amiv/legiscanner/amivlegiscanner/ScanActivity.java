@@ -203,6 +203,7 @@ public class ScanActivity extends AppCompatActivity {
             return;
 
         mLegiInputField.setText("");
+        ResetResponseUI();
 
         SubmitLegiNrToServer(s);
     }
