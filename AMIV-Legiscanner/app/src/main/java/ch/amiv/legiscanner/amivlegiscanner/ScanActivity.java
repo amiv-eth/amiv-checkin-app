@@ -49,6 +49,7 @@ import java.util.Map;
 
 public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
+    private static int REFRESH_STAT_DELAY = 5000;  //frequency at which to refresh the stats, such as current attendance
 
     boolean mWaitingOnServer = false;
     boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
@@ -104,6 +105,8 @@ public class ScanActivity extends AppCompatActivity {
 
         mAttendanceStatLabel = (TextView)findViewById(R.id.AttendanceStatLabel);
         mRemainingStatLabel = (TextView)findViewById(R.id.RemainingStatLabel);
+        mAttendanceStatLabel.setVisibility(View.VISIBLE);
+        mRemainingStatLabel.setVisibility(View.VISIBLE);
 
         RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.CameraLayout);
         mCameraLayout.setOnClickListener(new View.OnClickListener() {
@@ -190,6 +193,18 @@ public class ScanActivity extends AppCompatActivity {
                 }
             }
         });
+
+        ResetResponseUI();
+        GetStats();
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {    //Refresh stats every x seconds
+
+            @Override
+            public void run() {
+                GetStats();
+            }
+        }, REFRESH_STAT_DELAY);
     }
 
     /**
