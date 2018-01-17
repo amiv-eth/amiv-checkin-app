@@ -5,7 +5,7 @@ Android app for scanning legi barcodes and sending to the AMIV checkin server, s
 Used for events, PVK and GV to see if people are registered for the events or to check people in/out of the GV. Note: Several people can use the app simultaneously for the same event.
 
 ### How to Install
-1. Download from the most recent tag [here](https://gitlab.ethz.ch/amiv/amiv-checkin-app/tags). Alternatively, view the "Legiscanner Builds\Release Build dd-mm-yy\release" Folder in the source and download the .apk file.
+1. Download using the _download link in bold (not the download icon or download zip!)_ in most recent tag [here](https://gitlab.ethz.ch/amiv/amiv-checkin-app/tags). Alternatively, view the "Legiscanner Builds\Release Build dd-mm-yy\release" Folder in the source and download the .apk file.
 2. Open the .apk file on your Android device
 3. Note: You need to temporarily allow installations from unknown sources, there should be a pop-up about this. You should turn off this setting after the installation is complete
 
