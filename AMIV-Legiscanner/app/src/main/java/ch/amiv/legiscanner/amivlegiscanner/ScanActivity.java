@@ -6,8 +6,10 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -42,12 +44,14 @@ import java.util.Map;
 public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
 
-    boolean mWaitingOnServer = false;
     boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
     boolean mCheckInOnLastBarcode = true;
     String mLastBarcodeScanned = "00000000";
     boolean mAllowNextBarcode = true;
     boolean mCanClearResponse = true;
+
+    //----Server Communication-----
+    boolean mWaitingOnServer = false;
 
 
     //-----UI Elements----
@@ -60,6 +64,7 @@ public class ScanActivity extends AppCompatActivity {
     ImageView mTickImage;
     ImageView mCrossImage;
     ImageView mBGTint;
+    FloatingActionButton mStartMemberListActivity;
 
     //-----Barcode Scanning Related----
     BarcodeDetector mBarcodeDetector;
@@ -74,6 +79,7 @@ public class ScanActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scan);
 
         //----Initialising UI-----
+        mStartMemberListActivity = (FloatingActionButton)findViewById(R.id.ShowMemberList);
         mLegiInputField = (EditText)findViewById(R.id.LegiInputField);
         mCheckInSwitch = (Switch)findViewById(R.id.CheckInSwitch);
         mCheckInSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -308,4 +314,12 @@ public class ScanActivity extends AppCompatActivity {
         mWaitingOnServer = isWaiting;
         mWaitLabel.setVisibility((isWaiting ? View.VISIBLE : View.INVISIBLE));
     }
+
+    //===Transition to  Member List Activity===
+    public void StartMemberListActivity(View view)
+    {
+        Intent intent = new Intent(this, MemberListActivity.class);
+        startActivity(intent);
+    }
+
 }
