@@ -24,7 +24,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -32,7 +31,6 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
@@ -61,7 +59,7 @@ public class ScanActivity extends AppCompatActivity {
 
     //----Server Communication-----
     boolean mWaitingOnServer = false;
-
+    public static final MemberDatabase memberDatabase = new MemberDatabase();
 
     //-----UI Elements----
     Switch mCheckInSwitch;
@@ -360,12 +358,15 @@ public class ScanActivity extends AppCompatActivity {
                         Log.e("postrequest", "JSON file response received.");
 
                         try {
-                            // Parsing json object response
-                            int totalSignups = response.getInt("Total Signups");
-                            int currentAttendance = response.getInt("Current Attendance");
-                            mRemainingStatLabel.setText("" + (totalSignups - currentAttendance));
-                            mAttendanceStatLabel.setText("" + currentAttendance);
+                            // Parsing json object response and save to the static memberDB
+                            memberDatabase.totalSignups = response.getInt("Total Signups");
+                            memberDatabase.currentAttendance = response.getInt("Current Attendance");
+                            mRemainingStatLabel.setText("" + (memberDatabase.totalSignups - memberDatabase.currentAttendance));
+                            mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
 
+                            memberDatabase.UpdateMemberData(response.getJSONArray("signups"));
+
+                            //debug only
                             JSONArray signups = response.getJSONArray("signups");
                             Log.e("postrequest", "length of signups: " + signups.length() + "   first persons name: " + ((JSONObject)signups.get(0)).getString("firstname"));
                         }

@@ -155,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
         {
             mInvalidPinLabel.setVisibility(View.VISIBLE);
             mInvalidPinLabel.setText(responseText);
+            mPinField.setText("");
         }
         else                    //Other error
         {
