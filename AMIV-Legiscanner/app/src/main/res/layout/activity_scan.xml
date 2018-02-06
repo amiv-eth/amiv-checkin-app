@@ -7,6 +7,7 @@
     tools:context="ch.amiv.legiscanner.amivlegiscanner.ScanActivity"
     tools:layout_editor_absoluteY="81dp">
 
+
     <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/CameraLayout"
         android:layout_width="0dp"
@@ -249,5 +250,20 @@
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/TickImage" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/ShowMemberList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginBottom="32dp"
+        android:layout_marginEnd="32dp"
+        android:clickable="true"
+        android:onClick="StartMemberListActivity"
+        app:backgroundTint="@color/colorPrimary"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@android:drawable/ic_menu_sort_by_size" />
 
 </android.support.constraint.ConstraintLayout>

@@ -6,8 +6,10 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -51,12 +53,14 @@ public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
     private static int REFRESH_STAT_DELAY = 5000;  //frequency at which to refresh the stats, such as current attendance
 
-    boolean mWaitingOnServer = false;
     boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
     boolean mCheckInOnLastBarcode = true;
     String mLastBarcodeScanned = "00000000";
     boolean mAllowNextBarcode = true;
     boolean mCanClearResponse = true;
+
+    //----Server Communication-----
+    boolean mWaitingOnServer = false;
 
 
     //-----UI Elements----
@@ -69,6 +73,7 @@ public class ScanActivity extends AppCompatActivity {
     ImageView mTickImage;
     ImageView mCrossImage;
     ImageView mBGTint;
+    FloatingActionButton mStartMemberListActivity;
 
     //Stats UI
     TextView mAttendanceStatLabel;
@@ -87,6 +92,7 @@ public class ScanActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scan);
 
         //----Initialising UI-----
+        mStartMemberListActivity = (FloatingActionButton)findViewById(R.id.ShowMemberList);
         mLegiInputField = (EditText)findViewById(R.id.LegiInputField);
         mCheckInSwitch = (Switch)findViewById(R.id.CheckInSwitch);
         mCheckInSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -404,4 +410,12 @@ public class ScanActivity extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(this);  //Add the request to the queue so it can be sent
         queue.add(req);
     }
+
+    //===Transition to  Member List Activity===
+    public void StartMemberListActivity(View view)
+    {
+        Intent intent = new Intent(this, MemberListActivity.class);
+        startActivity(intent);
+    }
+
 }
