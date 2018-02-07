@@ -6,9 +6,11 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -232,6 +234,8 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void SubmitLegiNrToServer(String leginr)
     {
+        MainActivity.vibrator.vibrate(50);
+
         final String formattedLeginr;
         if(leginr.charAt(0) == 'S')         //Remove prefix S from barcode if needed
             formattedLeginr = leginr.substring(1);
@@ -309,6 +313,8 @@ public class ScanActivity extends AppCompatActivity {
             mTickImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorValid));
+
+            MainActivity.vibrator.vibrate(100);
         }
         else {                  //invalid legi/already checked in etc
             mInvalidLabel.setVisibility(View.VISIBLE);
@@ -316,6 +322,8 @@ public class ScanActivity extends AppCompatActivity {
             mCrossImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
+
+            MainActivity.vibrator.vibrate(250);
         }
 
         GetStats();
@@ -358,17 +366,44 @@ public class ScanActivity extends AppCompatActivity {
                         Log.e("postrequest", "JSON file response received.");
 
                         try {
-                            // Parsing json object response and save to the static memberDB
-                            memberDatabase.totalSignups = response.getInt("Total Signups");
-                            memberDatabase.currentAttendance = response.getInt("Current Attendance");
-                            mRemainingStatLabel.setText("" + (memberDatabase.totalSignups - memberDatabase.currentAttendance));
-                            mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
+                            Log.e("postrequest", "response length:" + response.length() + "   keys: " + response.keys().next() + "   content: " + response.toString());
 
-                            memberDatabase.UpdateMemberData(response.getJSONArray("signups"));
+                            //Event type is either GV or Event, this will change what is in the json
+                            if(response.has("signups")) {   //In the case of an event                   //XXXX GV seems to have signups as well
+                                // Parsing json object response and save to the static memberDB
+                                if (response.has("signups")) {
+                                    memberDatabase.UpdateMemberData(response.getJSONArray("signups"));
+                                    //debug only
+                                    JSONArray signups = response.getJSONArray("signups");
+                                    Log.e("postrequest", "length of signups: " + signups.length() + "   first persons name: " + ((JSONObject)signups.get(0)).getString("firstname"));
+                                }
 
-                            //debug only
-                            JSONArray signups = response.getJSONArray("signups");
-                            Log.e("postrequest", "length of signups: " + signups.length() + "   first persons name: " + ((JSONObject)signups.get(0)).getString("firstname"));
+                                JSONObject stats = response.getJSONObject("statistics");    //XXXX Change to JSONArray, stats are somehow stored in an array rather than object
+
+                                if (stats.has("Total Signups")) {
+                                    memberDatabase.totalSignups = stats.getInt("Total Signups");
+                                    mRemainingStatLabel.setText("" + (memberDatabase.totalSignups - memberDatabase.currentAttendance));
+                                    mRemainingStatLabel.setTextColor(R.color.colorInvalid);
+                                }
+                                if (stats.has("Current Attendance")) {
+                                    memberDatabase.currentAttendance = stats.getInt("Current Attendance");
+                                    mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
+                                    mAttendanceStatLabel.setTextColor(R.color.colorValid);
+                                }
+                            }
+                            else    //In the case of a GV
+                            {
+                                if (response.has("Total Members Present")) {
+                                    memberDatabase.totalSignups = response.getInt("Total Members Present");
+                                    mRemainingStatLabel.setText("" + memberDatabase.totalSignups);
+                                    mRemainingStatLabel.setTextColor(R.color.colorValid);
+                                }
+                                if (response.has("Maximum Attendance")) {
+                                    memberDatabase.currentAttendance = response.getInt("Maximum Attendance");
+                                    mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
+                                    mAttendanceStatLabel.setTextColor(R.color.colorValid);
+                                }
+                            }
                         }
                         catch (JSONException e) {
                             Log.e("postrequest", "Error parsing received JsonObject in GetStats().");

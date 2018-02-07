@@ -6,8 +6,10 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +19,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -30,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
     EditText mPinField;
     TextView mInvalidPinLabel;
+    public static Vibrator vibrator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +42,17 @@ public class MainActivity extends AppCompatActivity {
 
         mPinField = (EditText)findViewById(R.id.PinField);
         mInvalidPinLabel = (TextView) findViewById(R.id.InvalidPinLabel);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
+        mPinField.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View view, int keyCode, KeyEvent keyevent) {
+                if ((keyevent.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    SubmitPin(view);
+                    return true;
+                }
+                return false;
+            }
+        });
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
@@ -82,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
         if(mWaitingOnServer || "".equals(mPinField.getText().toString()))  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
         mWaitingOnServer = true;
+
+        vibrator.vibrate(50);
 
         CurrentPin = mPinField.getText().toString();
 

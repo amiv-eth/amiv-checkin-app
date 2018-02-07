@@ -3,6 +3,7 @@
     package="ch.amiv.legiscanner.amivlegiscanner">
 
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <meta-data
         android:name="com.google.android.gms.vision.DEPENDENCIES"
