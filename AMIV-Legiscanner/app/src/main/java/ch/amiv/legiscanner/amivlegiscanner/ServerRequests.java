@@ -28,6 +28,7 @@ import java.util.Map;
  */
 
 public final class ServerRequests {
+    public static RequestQueue requestQueue;
 
     public interface MemberDBUpdatedCallback {  //used for doing callbacks when the memberDB has been updated
         void OnMDBUpdated();
@@ -45,7 +46,7 @@ public final class ServerRequests {
         Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + "/checkin_update_data");
 
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(context) + "/checkin_update_data",
-                null, new Response.Listener<JSONObject>() {
+                (JSONObject) null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 Log.e("postrequest", "JSON file response received.");
@@ -134,10 +135,9 @@ public final class ServerRequests {
             }
         };
 
-        //Add function to update stats/list of people
-
-        RequestQueue queue = Volley.newRequestQueue(context);  //Add the request to the queue so it can be sent
-        queue.add(req);
+        if(requestQueue == null)
+            requestQueue = Volley.newRequestQueue(context);  //Adds the defined post request to the queue to be sent to the server
+        requestQueue.add(req);
     }
 
     /**

@@ -301,9 +301,9 @@ public class ScanActivity extends AppCompatActivity {
         };
         //----end of defining post request----
 
-
-        RequestQueue queue = Volley.newRequestQueue(this);  //Add the request to the queue so it can be sent
-        queue.add(postRequest);
+        if(ServerRequests.requestQueue == null)
+            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
+        ServerRequests.requestQueue.add(postRequest);
     }
 
     /**

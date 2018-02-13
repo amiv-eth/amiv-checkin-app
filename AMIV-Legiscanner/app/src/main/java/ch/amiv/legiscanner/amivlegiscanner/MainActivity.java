@@ -32,6 +32,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     public static String CurrentPin;
     boolean mWaitingOnServer = false;
+    RequestQueue queue;
 
     EditText mPinField;
     TextView mInvalidPinLabel;
@@ -122,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                             ApplyServerResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
                         else
                             InvalidUrlResponse();
-
                     }
                 });
 
@@ -140,8 +140,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        RequestQueue queue = Volley.newRequestQueue(this);  //Adds the defined post request to the queue to be sent to the server
-        queue.add(postRequest);
+        if(ServerRequests.requestQueue == null)
+            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
+        ServerRequests.requestQueue.add(postRequest);
 
 
         //StartScanActivity();    //NOTE: Uncomment for debugging without valid pin
