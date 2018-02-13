@@ -6,11 +6,9 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
-import android.os.Vibrator;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -27,23 +25,17 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -61,7 +53,6 @@ public class ScanActivity extends AppCompatActivity {
 
     //----Server Communication-----
     boolean mWaitingOnServer = false;
-    public static final MemberDatabase memberDatabase = new MemberDatabase();
 
     //-----UI Elements----
     Switch mCheckInSwitch;
@@ -203,12 +194,12 @@ public class ScanActivity extends AppCompatActivity {
         ResetResponseUI();
         GetStats();
 
-        Handler handler = new Handler();
+        final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {    //Refresh stats every x seconds
-
             @Override
             public void run() {
                 GetStats();
+                handler.postDelayed(this, REFRESH_STAT_DELAY);  //ensure to call this same runnable again so it repeats
             }
         }, REFRESH_STAT_DELAY);
     }
@@ -351,100 +342,43 @@ public class ScanActivity extends AppCompatActivity {
     }
 
 
-    //-----Updating Stats-----   //STILL IN DEVELOPMENT
+    //-----Updating Stats-----
     /**
      * Will Get the list of people for the event from the server, with stats.
      */
+    public void UpdateStatsUI()
+    {
+        if(MemberDatabase.instance == null)
+            return;
+
+        if(MemberDatabase.instance.eventType == MemberDatabase.EventType.Event) {
+            mRemainingStatLabel.setText("" + (MemberDatabase.instance.totalSignups - MemberDatabase.instance.currentAttendance));
+            mRemainingStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
+            mAttendanceStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mAttendanceStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+        }
+        else if(MemberDatabase.instance.eventType == MemberDatabase.EventType.GV)
+        {
+            mRemainingStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mRemainingStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mAttendanceStatLabel.setText("" + MemberDatabase.instance.regularMembers);
+            mAttendanceStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+        }
+    }
+
     private void GetStats ()
     {
-        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(getApplicationContext()) + "/checkin_update_data");
+        if(MemberDatabase.instance == null)
+            MemberDatabase.instance = new MemberDatabase();
 
-        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(getApplicationContext()) + "/checkin_update_data",
-                null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.e("postrequest", "JSON file response received.");
-
-                        try {
-                            Log.e("postrequest", "response length:" + response.length() + "   keys: " + response.keys().next() + "   content: " + response.toString());
-
-                            //Event type is either GV or Event, this will change what is in the json
-                            if(response.has("signups")) {   //In the case of an event                   //XXXX GV seems to have signups as well
-                                // Parsing json object response and save to the static memberDB
-                                if (response.has("signups")) {
-                                    memberDatabase.UpdateMemberData(response.getJSONArray("signups"));
-                                    //debug only
-                                    JSONArray signups = response.getJSONArray("signups");
-                                    Log.e("postrequest", "length of signups: " + signups.length() + "   first persons name: " + ((JSONObject)signups.get(0)).getString("firstname"));
-                                }
-
-                                JSONObject stats = response.getJSONObject("statistics");    //XXXX Change to JSONArray, stats are somehow stored in an array rather than object
-
-                                if (stats.has("Total Signups")) {
-                                    memberDatabase.totalSignups = stats.getInt("Total Signups");
-                                    mRemainingStatLabel.setText("" + (memberDatabase.totalSignups - memberDatabase.currentAttendance));
-                                    mRemainingStatLabel.setTextColor(R.color.colorInvalid);
-                                }
-                                if (stats.has("Current Attendance")) {
-                                    memberDatabase.currentAttendance = stats.getInt("Current Attendance");
-                                    mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
-                                    mAttendanceStatLabel.setTextColor(R.color.colorValid);
-                                }
-                            }
-                            else    //In the case of a GV
-                            {
-                                if (response.has("Total Members Present")) {
-                                    memberDatabase.totalSignups = response.getInt("Total Members Present");
-                                    mRemainingStatLabel.setText("" + memberDatabase.totalSignups);
-                                    mRemainingStatLabel.setTextColor(R.color.colorValid);
-                                }
-                                if (response.has("Maximum Attendance")) {
-                                    memberDatabase.currentAttendance = response.getInt("Maximum Attendance");
-                                    mAttendanceStatLabel.setText("" + memberDatabase.currentAttendance);
-                                    mAttendanceStatLabel.setTextColor(R.color.colorValid);
-                                }
-                            }
-                        }
-                        catch (JSONException e) {
-                            Log.e("postrequest", "Error parsing received JsonObject in GetStats().");
-                            e.printStackTrace();
-                        }
-                    }
-                }, new Response.ErrorListener() {
-                    @Override
-                    public void onErrorResponse(VolleyError error) {
-                        Log.e("postrequest", "Response from server for JSON data: " + error.networkResponse.statusCode + " with text: " + new String(error.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
-                    }
-                })
-        {
+        ServerRequests.UpdateMemberDB(getApplicationContext(),
+                new ServerRequests.MemberDBUpdatedCallback(){
             @Override
-            protected VolleyError parseNetworkError(VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                Log.e("postrequest", "parseNetworkError Response from server for JSON data: " + volleyError.networkResponse.statusCode + " with text: " + new String(volleyError.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
-
-                final VolleyError ve = volleyError;
-                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
-                    public void run() {
-                        //AddFunctionHERE(ve.networkResponse.statusCode, new String(ve.networkResponse.data)); //add function on main thread
-                    }
-                });
-
-                return super.parseNetworkError(volleyError);
+            public void OnMDBUpdated()
+            {
+                UpdateStatsUI();
             }
-
-
-            @Override
-            public Map<String, String> getHeaders() throws AuthFailureError {
-                HashMap<String, String> headers = new HashMap<String, String>();
-
-                headers.put("pin", MainActivity.CurrentPin);
-                return headers;
-            }
-        };
-
-        //Add function to update stats/list of people
-
-        RequestQueue queue = Volley.newRequestQueue(this);  //Add the request to the queue so it can be sent
-        queue.add(req);
+        });
     }
 
     //===Transition to  Member List Activity===

@@ -86,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
         mWaitingOnServer = false;
         mPinField.setText("");  //clear pin field
         mInvalidPinLabel.setVisibility(View.INVISIBLE);
+        MemberDatabase.instance = null;
     }
 
     /**

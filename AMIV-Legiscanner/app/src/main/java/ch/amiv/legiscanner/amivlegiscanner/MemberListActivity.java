@@ -3,16 +3,12 @@ package ch.amiv.legiscanner.amivlegiscanner;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-import java.util.Calendar;
-
 public class MemberListActivity extends Activity {
-    //private static int REFRESH_LIST_DELAY = 5000;
-    //private Handler handler = new Handler();    //Delayed call to only allow submission of another legi in x seconds
+    private static int REFRESH_LIST_DELAY = 5000;
 
     private ListView mListview;
     CustomListAdapter adapter;
@@ -24,17 +20,29 @@ public class MemberListActivity extends Activity {
         setContentView(R.layout.activity_member_list);
 
         UpdateList();
+
+        final Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {    //Refresh stats every x seconds
+            @Override
+            public void run() {
+                ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.MemberDBUpdatedCallback() {
+                    @Override
+                    public void OnMDBUpdated() {
+                        UpdateList();
+                    }
+                });
+                handler.postDelayed(this, REFRESH_LIST_DELAY);
+            }
+        }, REFRESH_LIST_DELAY);
     }
 
     public void InitialiseListView ()
     {
-        if(ScanActivity.memberDatabase.members == null)  //XXX fetch the data and wait until we have the data from ther server to create the list view. Some async stuff here...
-        {
-            ScanActivity.memberDatabase.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
+        if(MemberDatabase.instance.members == null) {
+            MemberDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
         }
 
-
-        adapter = new CustomListAdapter(this, ScanActivity.memberDatabase.members);
+        adapter = new CustomListAdapter(this, MemberDatabase.instance.members);
 
         mListview = (ListView) findViewById(R.id.listView);
         mListview.setAdapter(adapter);
@@ -42,20 +50,11 @@ public class MemberListActivity extends Activity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 int itemPos = position;
-                String itemValue = (String) mListview.getItemAtPosition(itemPos);
+                //String itemValue = (String) mListview.getItemAtPosition(itemPos);
             }
         });
     }
-/*
-    Runnable refreshList = new Runnable() {    //Creates delay call to only allow scanning again after x seconds
 
-        @Override
-        public void run() {
-            UpdateList();
-            handler.postDelayed(refreshList, REFRESH_LIST_DELAY);
-        }
-    };
-*/
     public void UpdateList()
     {
         if(mListview == null)

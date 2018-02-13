@@ -1,5 +1,7 @@
 package ch.amiv.legiscanner.amivlegiscanner;
 
+import android.util.Log;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,11 +15,29 @@ import java.util.List;
  * See README_API on the server side repo
  */
 public class MemberDatabase {
+    public static MemberDatabase instance;
+    public enum EventType {GV, Event, none}
+    public EventType eventType = EventType.none;
+
     final List<Member> members = new ArrayList<Member>();
 
     //-----Statistics------
-    public int totalSignups;
-    public int currentAttendance;
+    public int totalSignups;        //For Events
+    public int currentAttendance;   //GV and Events
+    public int regularMembers;      //For GV
+    public int extraordinaryMembers;
+    public int honoraryMembers;
+    public int totalMembers;
+    public int totalNonMembers;
+    public int maxAttendance;
+
+    public MemberDatabase ()
+    {
+        if(instance != null)
+            Log.e("memberDatabase", "A Member Database already exists, cannot create another. Should delete old MemberDB if this is wanted");
+
+        instance = this;
+    }
 
     public void UpdateMemberData(JSONArray _members)
     {
