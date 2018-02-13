@@ -51,6 +51,15 @@ public class ScanActivity extends AppCompatActivity {
     boolean mAllowNextBarcode = true;
     boolean mCanClearResponse = true;
 
+    Handler handler = new Handler();    //Delayed call to only allow submission of another legi in x seconds
+    Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
+        @Override
+        public void run() {
+            RefreshMemberDB();
+            handler.postDelayed(this, REFRESH_STAT_DELAY);  //ensure to call this same runnable again so it repeats
+        }
+    };
+
     //----Server Communication-----
     boolean mWaitingOnServer = false;
 
@@ -177,7 +186,6 @@ public class ScanActivity extends AppCompatActivity {
 
                             mBarcodeInfo.setText(barcodes.valueAt(0).displayValue);
 
-                            Handler handler = new Handler();    //Delayed call to only allow submission of another legi in x seconds
                             handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
 
                                 @Override
@@ -192,16 +200,21 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         ResetResponseUI();
-        GetStats();
+        RefreshMemberDB();
 
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {    //Refresh stats every x seconds
-            @Override
-            public void run() {
-                GetStats();
-                handler.postDelayed(this, REFRESH_STAT_DELAY);  //ensure to call this same runnable again so it repeats
-            }
-        }, REFRESH_STAT_DELAY);
+        handler.postDelayed(refreshMemberDB, 0);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(refreshMemberDB);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.postDelayed(refreshMemberDB, 0);
     }
 
     /**
@@ -226,6 +239,11 @@ public class ScanActivity extends AppCompatActivity {
     public void SubmitLegiNrToServer(String leginr)
     {
         MainActivity.vibrator.vibrate(50);
+
+        if(!ServerRequests.CheckConnection(getApplicationContext())) {
+            SetUIFromResponse(0, "");
+            return;
+        }
 
         final String formattedLeginr;
         if(leginr.charAt(0) == 'S')         //Remove prefix S from barcode if needed
@@ -307,7 +325,16 @@ public class ScanActivity extends AppCompatActivity {
 
             MainActivity.vibrator.vibrate(100);
         }
-        else {                  //invalid legi/already checked in etc
+        else if (statusCode == 0)   //no internet
+        {
+            mInvalidLabel.setVisibility(View.VISIBLE);
+            mInvalidLabel.setText(R.string.no_internet);
+            mCrossImage.setVisibility(View.VISIBLE);
+            mBGTint.setVisibility(View.VISIBLE);
+            mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
+        }
+        else
+        {                  //invalid legi/already checked in etc
             mInvalidLabel.setVisibility(View.VISIBLE);
             mInvalidLabel.setText(responseText);
             mCrossImage.setVisibility(View.VISIBLE);
@@ -317,7 +344,7 @@ public class ScanActivity extends AppCompatActivity {
             MainActivity.vibrator.vibrate(250);
         }
 
-        GetStats();
+        RefreshMemberDB();
     }
 
     private void ResetResponseUI ()
@@ -366,7 +393,7 @@ public class ScanActivity extends AppCompatActivity {
         }
     }
 
-    private void GetStats ()
+    private void RefreshMemberDB()
     {
         if(MemberDatabase.instance == null)
             MemberDatabase.instance = new MemberDatabase();

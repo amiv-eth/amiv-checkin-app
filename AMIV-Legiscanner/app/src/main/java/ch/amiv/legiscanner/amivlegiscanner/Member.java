@@ -20,18 +20,14 @@ public class Member {
 
     public Member (JSONObject _member)
     {
-        try {
-            serverId    = _member.getString("_id");
-            checkedIn   = _member.getBoolean("checked_in");
-            email       = _member.getString("email");
-            firstname   = _member.getString("firstname");
-            lastname    = _member.getString("lastname");
-            legi        = _member.getString("legi");
-            membership  = _member.getString("membership");
-            nethz       = _member.getString("nethz");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        serverId    = _member.optString("_id");
+        checkedIn   = _member.optBoolean("checked_in");
+        email       = _member.optString("email");
+        firstname   = _member.optString("firstname");
+        lastname    = _member.optString("lastname");
+        legi        = _member.optString("legi");
+        membership  = _member.optString("membership");
+        nethz       = _member.optString("nethz");
     }
 
     public Member (String _serverId, boolean _checkedIn, String _email, String _firstname, String _lastname, String _legi, String _membership, String _nethz)

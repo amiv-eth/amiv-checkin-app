@@ -1,6 +1,8 @@
 package ch.amiv.legiscanner.amivlegiscanner;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -15,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +39,9 @@ public final class ServerRequests {
      */
     public static void UpdateMemberDB (Context context, final MemberDBUpdatedCallback callback)
     {
+        if(!CheckConnection(context))
+            return;
+
         Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + "/checkin_update_data");
 
         JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(context) + "/checkin_update_data",
@@ -114,7 +120,8 @@ public final class ServerRequests {
         {
             @Override
             protected VolleyError parseNetworkError(VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                Log.e("postrequest", "parseNetworkError Response from server for JSON data: " + volleyError.networkResponse.statusCode + " with text: " + new String(volleyError.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
+                if(volleyError != null)
+                    Log.e("postrequest", "parseNetworkError Response from server for JSON data: " + volleyError.networkResponse.statusCode + " with text: " + new String(volleyError.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
                 return super.parseNetworkError(volleyError);
             }
 
@@ -131,5 +138,23 @@ public final class ServerRequests {
 
         RequestQueue queue = Volley.newRequestQueue(context);  //Add the request to the queue so it can be sent
         queue.add(req);
+    }
+
+    /**
+     * @param context
+     * @return returns true if there is an active internet connection, test this before requesting something from the server
+     */
+
+    public static boolean CheckConnection(Context context)
+    {
+        ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+
+        if((activeNetwork == null || !activeNetwork.isConnectedOrConnecting()))
+        {
+            Log.e("postrequest", "No active internet connection");
+            return false;
+        }
+        return true;
     }
 }

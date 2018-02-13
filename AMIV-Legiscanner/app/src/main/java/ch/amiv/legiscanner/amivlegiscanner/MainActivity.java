@@ -9,6 +9,8 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -54,28 +56,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) { //Get permission for camera
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                //Add popup
             }
+            else
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
         }
     }
 
@@ -95,11 +81,17 @@ public class MainActivity extends AppCompatActivity {
      */
     public void SubmitPin(View view)
     {
+        vibrator.vibrate(50);
+
+        if(!ServerRequests.CheckConnection(getApplicationContext())) {
+            ApplyServerResponse(0, "");
+            return;
+        }
+
         if(mWaitingOnServer || "".equals(mPinField.getText().toString()))  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
         mWaitingOnServer = true;
 
-        vibrator.vibrate(50);
 
         CurrentPin = mPinField.getText().toString();
 
@@ -174,6 +166,11 @@ public class MainActivity extends AppCompatActivity {
             mInvalidPinLabel.setVisibility(View.VISIBLE);
             mInvalidPinLabel.setText(responseText);
             mPinField.setText("");
+        }
+        else if (statusCode == 0) //no internet connection
+        {
+            mInvalidPinLabel.setVisibility(View.VISIBLE);
+            mInvalidPinLabel.setText(R.string.no_internet);
         }
         else                    //Other error
         {

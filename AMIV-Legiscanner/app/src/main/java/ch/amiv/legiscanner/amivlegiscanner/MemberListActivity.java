@@ -3,16 +3,29 @@ package ch.amiv.legiscanner.amivlegiscanner;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
-public class MemberListActivity extends Activity {
+public class MemberListActivity extends AppCompatActivity {
     private static int REFRESH_LIST_DELAY = 5000;
 
     private ListView mListview;
     CustomListAdapter adapter;
-
+    final Handler handler = new Handler();
+    Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
+        @Override
+        public void run() {
+            ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.MemberDBUpdatedCallback() {
+                @Override
+                public void OnMDBUpdated() {
+                    UpdateList();
+                }
+            });
+            handler.postDelayed(this, REFRESH_LIST_DELAY);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,19 +34,7 @@ public class MemberListActivity extends Activity {
 
         UpdateList();
 
-        final Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {    //Refresh stats every x seconds
-            @Override
-            public void run() {
-                ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.MemberDBUpdatedCallback() {
-                    @Override
-                    public void OnMDBUpdated() {
-                        UpdateList();
-                    }
-                });
-                handler.postDelayed(this, REFRESH_LIST_DELAY);
-            }
-        }, REFRESH_LIST_DELAY);
+        handler.postDelayed(refreshMemberDB, 0);
     }
 
     public void InitialiseListView ()
@@ -53,6 +54,18 @@ public class MemberListActivity extends Activity {
                 //String itemValue = (String) mListview.getItemAtPosition(itemPos);
             }
         });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(refreshMemberDB);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.postDelayed(refreshMemberDB, 0);
     }
 
     public void UpdateList()

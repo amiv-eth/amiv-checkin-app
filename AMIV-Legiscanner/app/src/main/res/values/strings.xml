@@ -81,4 +81,5 @@
     <string name="no_barcode_detected">No Barcode Detected</string>
     <string name="invalid_pin">Invalid PIN</string>
     <string name="invalid_url">Invalid URL</string>
+    <string name="no_internet">No Internet</string>
 </resources>
