@@ -27,7 +27,6 @@ import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
@@ -43,7 +42,6 @@ import java.util.Map;
 
 public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
-    private static int REFRESH_STAT_DELAY = 5000;  //frequency at which to refresh the stats, such as current attendance
 
     boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
     boolean mCheckInOnLastBarcode = true;
@@ -51,17 +49,17 @@ public class ScanActivity extends AppCompatActivity {
     boolean mAllowNextBarcode = true;
     boolean mCanClearResponse = true;
 
-    Handler handler = new Handler();    //Delayed call to only allow submission of another legi in x seconds
+    //----Server Communication-----
+    boolean mWaitingOnServer = false;
+    Handler handler = new Handler();    //Used for delaying function calls, in conjunction with runnables
     Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
         public void run() {
             RefreshMemberDB();
-            handler.postDelayed(this, REFRESH_STAT_DELAY);  //ensure to call this same runnable again so it repeats
+            if(SettingsActivity.GetAutoRefresh(getApplicationContext()))
+                handler.postDelayed(this, SettingsActivity.GetRefreshFrequency(getApplicationContext()));  //ensure to call this same runnable again so it repeats, if this is allowed
         }
     };
-
-    //----Server Communication-----
-    boolean mWaitingOnServer = false;
 
     //-----UI Elements----
     Switch mCheckInSwitch;
@@ -76,8 +74,10 @@ public class ScanActivity extends AppCompatActivity {
     FloatingActionButton mStartMemberListActivity;
 
     //Stats UI
-    TextView mAttendanceStatLabel;
-    TextView mRemainingStatLabel;
+    TextView mLeftStatLabel;
+    TextView mRightStatLabel;
+    TextView mLeftStatDesc;
+    TextView mRightStatDesc;
 
     //-----Barcode Scanning Related----
     BarcodeDetector mBarcodeDetector;
@@ -109,10 +109,10 @@ public class ScanActivity extends AppCompatActivity {
         mBGTint = (ImageView)findViewById(R.id.BackgroundTint);
         mBGTint.setAlpha(0.4f);
 
-        mAttendanceStatLabel = (TextView)findViewById(R.id.AttendanceStatLabel);
-        mRemainingStatLabel = (TextView)findViewById(R.id.RemainingStatLabel);
-        mAttendanceStatLabel.setVisibility(View.VISIBLE);
-        mRemainingStatLabel.setVisibility(View.VISIBLE);
+        mLeftStatLabel = (TextView)findViewById(R.id.LeftStatLabel);
+        mRightStatLabel = (TextView)findViewById(R.id.RightStatLabel);
+        mLeftStatDesc = (TextView)findViewById(R.id.LeftStatDescription);
+        mRightStatDesc = (TextView)findViewById(R.id.RightStatDescription);
 
         RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.CameraLayout);
         mCameraLayout.setOnClickListener(new View.OnClickListener() {
@@ -200,9 +200,7 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         ResetResponseUI();
-        RefreshMemberDB();
-
-        handler.postDelayed(refreshMemberDB, 0);
+        //Note the refreshMemberDB handler function is called in OnResume, as this is called after onCreate
     }
 
     @Override
@@ -373,26 +371,6 @@ public class ScanActivity extends AppCompatActivity {
     /**
      * Will Get the list of people for the event from the server, with stats.
      */
-    public void UpdateStatsUI()
-    {
-        if(MemberDatabase.instance == null)
-            return;
-
-        if(MemberDatabase.instance.eventType == MemberDatabase.EventType.Event) {
-            mRemainingStatLabel.setText("" + (MemberDatabase.instance.totalSignups - MemberDatabase.instance.currentAttendance));
-            mRemainingStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
-            mAttendanceStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
-            mAttendanceStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-        }
-        else if(MemberDatabase.instance.eventType == MemberDatabase.EventType.GV)
-        {
-            mRemainingStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
-            mRemainingStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mAttendanceStatLabel.setText("" + MemberDatabase.instance.regularMembers);
-            mAttendanceStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-        }
-    }
-
     private void RefreshMemberDB()
     {
         if(MemberDatabase.instance == null)
@@ -400,12 +378,42 @@ public class ScanActivity extends AppCompatActivity {
 
         ServerRequests.UpdateMemberDB(getApplicationContext(),
                 new ServerRequests.MemberDBUpdatedCallback(){
-            @Override
-            public void OnMDBUpdated()
-            {
-                UpdateStatsUI();
-            }
-        });
+                    @Override
+                    public void OnMDBUpdated()
+                    {
+                        UpdateStatsUI();
+                    }
+                });
+    }
+
+    /**
+     * This function is called when the memberDB has been updated, the callback is handled in RefreshMemberDB()
+     */
+    public void UpdateStatsUI()
+    {
+        if(MemberDatabase.instance == null)
+            return;
+
+        if(MemberDatabase.instance.eventType == MemberDatabase.EventType.Event)
+        {
+            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mRightStatLabel.setText("" + (MemberDatabase.instance.totalSignups - MemberDatabase.instance.currentAttendance));
+            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
+
+            mLeftStatDesc.setText("Current");
+            mRightStatDesc.setText("Remaining");
+        }
+        else if(MemberDatabase.instance.eventType == MemberDatabase.EventType.GV)
+        {
+            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mRightStatLabel.setText("" + MemberDatabase.instance.regularMembers);
+            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+
+            mLeftStatDesc.setText("Current");
+            mRightStatDesc.setText("Regular");
+        }
     }
 
     //===Transition to  Member List Activity===

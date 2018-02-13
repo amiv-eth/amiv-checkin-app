@@ -17,7 +17,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,6 +52,11 @@ public final class ServerRequests {
 
                 // Parsing json object response and save to the static memberDB
                 try {
+                    if(MemberDatabase.instance == null) {
+                        Log.e("postrequest", "Cancelled parsing json as assumed the scanning session was ended.");
+                        return;
+                    }
+
                     Log.e("postrequest", "response length:" + response.length() + "   keys: " + response.keys().next() + "   content: " + response.toString());
 
                     //1. Update List of People

@@ -1,11 +1,10 @@
 package ch.amiv.legiscanner.amivlegiscanner;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
  * Created by Roger on 06-Feb-18.
- * This class stores the data that an individual member has
+ * This class stores the data that an individual member has, matches what is giver by the server (see server side project's README_API)
  */
 
 public class Member {

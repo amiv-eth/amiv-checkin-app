@@ -141,6 +141,7 @@
         android:hint="Legi Nr"
         android:inputType="text"
         android:textColor="@android:color/white"
+        android:textColorHint="@android:color/white"
         app:layout_constraintEnd_toStartOf="@+id/SubmitLegiNrButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/CheckInSwitch" />
@@ -159,7 +160,7 @@
 
     <TextView
         android:id="@+id/ValidLabel"
-        android:layout_width="163dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -169,8 +170,8 @@
         android:textColor="@android:color/white"
         android:textSize="32sp"
         android:visibility="invisible"
-        app:layout_constraintEnd_toStartOf="@+id/RemainingStatLabel"
-        app:layout_constraintStart_toEndOf="@+id/AttendanceStatLabel"
+        app:layout_constraintEnd_toStartOf="@+id/RightStatLabel"
+        app:layout_constraintStart_toEndOf="@+id/LeftStatLabel"
         app:layout_constraintTop_toBottomOf="@+id/SubmitLegiNrButton" />
 
     <TextView
@@ -185,13 +186,13 @@
         android:textColor="@android:color/white"
         android:textSize="32sp"
         android:visibility="invisible"
-        app:layout_constraintEnd_toStartOf="@+id/RemainingStatLabel"
-        app:layout_constraintStart_toEndOf="@+id/AttendanceStatLabel"
+        app:layout_constraintEnd_toStartOf="@+id/RightStatLabel"
+        app:layout_constraintStart_toEndOf="@+id/LeftStatLabel"
         app:layout_constraintTop_toBottomOf="@+id/SubmitLegiNrButton" />
 
     <TextView
         android:id="@+id/InvalidLabel"
-        android:layout_width="167dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -201,8 +202,8 @@
         android:textColor="@android:color/white"
         android:textSize="28sp"
         android:visibility="invisible"
-        app:layout_constraintEnd_toStartOf="@+id/RemainingStatLabel"
-        app:layout_constraintStart_toEndOf="@+id/AttendanceStatLabel"
+        app:layout_constraintEnd_toStartOf="@+id/RightStatLabel"
+        app:layout_constraintStart_toEndOf="@+id/LeftStatLabel"
         app:layout_constraintTop_toBottomOf="@+id/SubmitLegiNrButton" />
 
     <TextView
@@ -220,9 +221,9 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/AttendanceStatLabel"
-        android:layout_width="63dp"
-        android:layout_height="50dp"
+        android:id="@+id/LeftStatLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginStart="20dp"
@@ -236,9 +237,9 @@
         app:layout_constraintTop_toTopOf="@+id/TickImage" />
 
     <TextView
-        android:id="@+id/RemainingStatLabel"
-        android:layout_width="63dp"
-        android:layout_height="50dp"
+        android:id="@+id/RightStatLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_marginEnd="20dp"
@@ -265,5 +266,31 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@android:drawable/ic_menu_sort_by_size" />
+
+    <TextView
+        android:id="@+id/LeftStatDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:textAlignment="textStart"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:visibility="visible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/LeftStatLabel" />
+
+    <TextView
+        android:id="@+id/RightStatDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="4dp"
+        android:textAlignment="textEnd"
+        android:textColor="@android:color/white"
+        android:textSize="16sp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/RightStatLabel" />
 
 </android.support.constraint.ConstraintLayout>

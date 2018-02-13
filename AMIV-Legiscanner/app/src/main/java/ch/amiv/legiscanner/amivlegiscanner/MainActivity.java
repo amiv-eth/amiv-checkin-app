@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     //Changes to the scanning screen
     private void StartScanActivity()
     {
+        MemberDatabase.instance = null;
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }

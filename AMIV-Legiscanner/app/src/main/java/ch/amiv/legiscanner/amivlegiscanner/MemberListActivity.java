@@ -1,6 +1,5 @@
 package ch.amiv.legiscanner.amivlegiscanner;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -8,12 +7,16 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+/**
+ * This activity is for displaying the list of signed in members, similar to what is seen in the checkin website in the other amiv checkin project.
+ * Mostly handles updating the data by fetching from the server and then updating the listview. Note the list view is customised, ie the individual item, this is what the CustomListAdapter class and listview_item.xml are for
+ */
+
 public class MemberListActivity extends AppCompatActivity {
-    private static int REFRESH_LIST_DELAY = 5000;
 
     private ListView mListview;
     CustomListAdapter adapter;
-    final Handler handler = new Handler();
+    final Handler handler = new Handler();  //similar as in scanActivity, to keep refreshing the data
     Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
         public void run() {
@@ -23,7 +26,8 @@ public class MemberListActivity extends AppCompatActivity {
                     UpdateList();
                 }
             });
-            handler.postDelayed(this, REFRESH_LIST_DELAY);
+            if(SettingsActivity.GetAutoRefresh(getApplicationContext()))
+                handler.postDelayed(this, SettingsActivity.GetRefreshFrequency(getApplicationContext()));
         }
     };
 
@@ -33,8 +37,6 @@ public class MemberListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_member_list);
 
         UpdateList();
-
-        handler.postDelayed(refreshMemberDB, 0);
     }
 
     public void InitialiseListView ()
@@ -57,7 +59,7 @@ public class MemberListActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
+    protected void onPause() {  //stop refreshing the data when the app is not active
         super.onPause();
         handler.removeCallbacks(refreshMemberDB);
     }
