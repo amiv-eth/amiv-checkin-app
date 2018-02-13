@@ -27,7 +27,6 @@ import android.widget.TextView;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
@@ -37,7 +36,7 @@ import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
-import java.io.IOException; 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,7 +51,15 @@ public class ScanActivity extends AppCompatActivity {
 
     //----Server Communication-----
     boolean mWaitingOnServer = false;
-
+    Handler handler = new Handler();    //Used for delaying function calls, in conjunction with runnables
+    Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
+        @Override
+        public void run() {
+            RefreshMemberDB();
+            if(SettingsActivity.GetAutoRefresh(getApplicationContext()))
+                handler.postDelayed(this, SettingsActivity.GetRefreshFrequency(getApplicationContext()));  //ensure to call this same runnable again so it repeats, if this is allowed
+        }
+    };
 
     //-----UI Elements----
     Switch mCheckInSwitch;
@@ -65,6 +72,12 @@ public class ScanActivity extends AppCompatActivity {
     ImageView mCrossImage;
     ImageView mBGTint;
     FloatingActionButton mStartMemberListActivity;
+
+    //Stats UI
+    TextView mLeftStatLabel;
+    TextView mRightStatLabel;
+    TextView mLeftStatDesc;
+    TextView mRightStatDesc;
 
     //-----Barcode Scanning Related----
     BarcodeDetector mBarcodeDetector;
@@ -96,6 +109,11 @@ public class ScanActivity extends AppCompatActivity {
         mBGTint = (ImageView)findViewById(R.id.BackgroundTint);
         mBGTint.setAlpha(0.4f);
 
+        mLeftStatLabel = (TextView)findViewById(R.id.LeftStatLabel);
+        mRightStatLabel = (TextView)findViewById(R.id.RightStatLabel);
+        mLeftStatDesc = (TextView)findViewById(R.id.LeftStatDescription);
+        mRightStatDesc = (TextView)findViewById(R.id.RightStatDescription);
+
         RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.CameraLayout);
         mCameraLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,7 +123,6 @@ public class ScanActivity extends AppCompatActivity {
                     ResetResponseUI();
                 }
             }
-
         });
 
         //----Setting up Camera and barcode tracking with callbacks------
@@ -169,12 +186,10 @@ public class ScanActivity extends AppCompatActivity {
 
                             mBarcodeInfo.setText(barcodes.valueAt(0).displayValue);
 
-                            Handler handler = new Handler();    //Delayed call to only allow submission of another legi in x seconds
                             handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
 
                                 @Override
                                 public void run() {
-                                    Log.e("barcodeDetect", "Next barcode scan possible");
                                     mCanClearResponse = true;
                                 }
                             }, NEXT_LEGI_DELAY);
@@ -183,6 +198,21 @@ public class ScanActivity extends AppCompatActivity {
                 }
             }
         });
+
+        ResetResponseUI();
+        //Note the refreshMemberDB handler function is called in OnResume, as this is called after onCreate
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(refreshMemberDB);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.postDelayed(refreshMemberDB, 0);
     }
 
     /**
@@ -206,6 +236,13 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void SubmitLegiNrToServer(String leginr)
     {
+        MainActivity.vibrator.vibrate(50);
+
+        if(!ServerRequests.CheckConnection(getApplicationContext())) {
+            SetUIFromResponse(0, "");
+            return;
+        }
+
         final String formattedLeginr;
         if(leginr.charAt(0) == 'S')         //Remove prefix S from barcode if needed
             formattedLeginr = leginr.substring(1);
@@ -250,8 +287,7 @@ public class ScanActivity extends AppCompatActivity {
             }
 
             @Override
-            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!
-                Log.e("postrequest", "Params Set: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out"));
+            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!`
 
                 Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
                 params.put("pin", MainActivity.CurrentPin);
@@ -263,9 +299,9 @@ public class ScanActivity extends AppCompatActivity {
         };
         //----end of defining post request----
 
-
-        RequestQueue queue = Volley.newRequestQueue(this);  //Add the request to the queue so it can be sent
-        queue.add(postRequest);
+        if(ServerRequests.requestQueue == null)
+            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
+        ServerRequests.requestQueue.add(postRequest);
     }
 
     /**
@@ -284,14 +320,29 @@ public class ScanActivity extends AppCompatActivity {
             mTickImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorValid));
+
+            MainActivity.vibrator.vibrate(100);
         }
-        else {                  //invalid legi/already checked in etc
+        else if (statusCode == 0)   //no internet
+        {
+            mInvalidLabel.setVisibility(View.VISIBLE);
+            mInvalidLabel.setText(R.string.no_internet);
+            mCrossImage.setVisibility(View.VISIBLE);
+            mBGTint.setVisibility(View.VISIBLE);
+            mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
+        }
+        else
+        {                  //invalid legi/already checked in etc
             mInvalidLabel.setVisibility(View.VISIBLE);
             mInvalidLabel.setText(responseText);
             mCrossImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
+
+            MainActivity.vibrator.vibrate(250);
         }
+
+        RefreshMemberDB();
     }
 
     private void ResetResponseUI ()
@@ -313,6 +364,56 @@ public class ScanActivity extends AppCompatActivity {
     {
         mWaitingOnServer = isWaiting;
         mWaitLabel.setVisibility((isWaiting ? View.VISIBLE : View.INVISIBLE));
+    }
+
+
+    //-----Updating Stats-----
+    /**
+     * Will Get the list of people for the event from the server, with stats.
+     */
+    private void RefreshMemberDB()
+    {
+        if(MemberDatabase.instance == null)
+            MemberDatabase.instance = new MemberDatabase();
+
+        ServerRequests.UpdateMemberDB(getApplicationContext(),
+                new ServerRequests.MemberDBUpdatedCallback(){
+                    @Override
+                    public void OnMDBUpdated()
+                    {
+                        UpdateStatsUI();
+                    }
+                });
+    }
+
+    /**
+     * This function is called when the memberDB has been updated, the callback is handled in RefreshMemberDB()
+     */
+    public void UpdateStatsUI()
+    {
+        if(MemberDatabase.instance == null)
+            return;
+
+        if(MemberDatabase.instance.eventType == MemberDatabase.EventType.Event)
+        {
+            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mRightStatLabel.setText("" + (MemberDatabase.instance.totalSignups - MemberDatabase.instance.currentAttendance));
+            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
+
+            mLeftStatDesc.setText("Current");
+            mRightStatDesc.setText("Remaining");
+        }
+        else if(MemberDatabase.instance.eventType == MemberDatabase.EventType.GV)
+        {
+            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mRightStatLabel.setText("" + MemberDatabase.instance.regularMembers);
+            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+
+            mLeftStatDesc.setText("Current");
+            mRightStatDesc.setText("Regular");
+        }
     }
 
     //===Transition to  Member List Activity===

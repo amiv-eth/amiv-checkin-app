@@ -1,0 +1,12 @@
+# generated files
+bin/
+gen/
+
+# Windows thumbnail db
+Thumbs.db
+
+# Android Studio
+*.iml
+.idea/
+.gradle
+.navigation

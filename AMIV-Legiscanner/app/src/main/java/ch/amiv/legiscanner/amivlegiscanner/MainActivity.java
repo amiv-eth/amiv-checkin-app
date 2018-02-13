@@ -6,8 +6,12 @@ package ch.amiv.legiscanner.amivlegiscanner;
  */
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +21,7 @@ import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -27,9 +32,11 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     public static String CurrentPin;
     boolean mWaitingOnServer = false;
+    RequestQueue queue;
 
     EditText mPinField;
     TextView mInvalidPinLabel;
+    public static Vibrator vibrator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,29 +45,24 @@ public class MainActivity extends AppCompatActivity {
 
         mPinField = (EditText)findViewById(R.id.PinField);
         mInvalidPinLabel = (TextView) findViewById(R.id.InvalidPinLabel);
+        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.CAMERA)) {
-
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
-            } else {
-
-                // No explanation needed, we can request the permission.
-
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
-
-                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+        mPinField.setOnKeyListener(new View.OnKeyListener() {
+            public boolean onKey(View view, int keyCode, KeyEvent keyevent) {
+                if ((keyevent.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+                    SubmitPin(view);
+                    return true;
+                }
+                return false;
             }
+        });
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) { //Get permission for camera
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
+                //Add popup
+            }
+            else
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
         }
     }
 
@@ -71,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
         mWaitingOnServer = false;
         mPinField.setText("");  //clear pin field
         mInvalidPinLabel.setVisibility(View.INVISIBLE);
+        MemberDatabase.instance = null;
     }
 
     /**
@@ -79,9 +82,17 @@ public class MainActivity extends AppCompatActivity {
      */
     public void SubmitPin(View view)
     {
+        vibrator.vibrate(50);
+
+        if(!ServerRequests.CheckConnection(getApplicationContext())) {
+            ApplyServerResponse(0, "");
+            return;
+        }
+
         if(mWaitingOnServer || "".equals(mPinField.getText().toString()))  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
         mWaitingOnServer = true;
+
 
         CurrentPin = mPinField.getText().toString();
 
@@ -112,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                             ApplyServerResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
                         else
                             InvalidUrlResponse();
-
                     }
                 });
 
@@ -130,8 +140,9 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        RequestQueue queue = Volley.newRequestQueue(this);  //Adds the defined post request to the queue to be sent to the server
-        queue.add(postRequest);
+        if(ServerRequests.requestQueue == null)
+            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
+        ServerRequests.requestQueue.add(postRequest);
 
 
         //StartScanActivity();    //NOTE: Uncomment for debugging without valid pin
@@ -154,7 +165,13 @@ public class MainActivity extends AppCompatActivity {
         else if(statusCode == 401)//invalid pin
         {
             mInvalidPinLabel.setVisibility(View.VISIBLE);
-            mInvalidPinLabel.setText(R.string.invalid_pin);
+            mInvalidPinLabel.setText(responseText);
+            mPinField.setText("");
+        }
+        else if (statusCode == 0) //no internet connection
+        {
+            mInvalidPinLabel.setVisibility(View.VISIBLE);
+            mInvalidPinLabel.setText(R.string.no_internet);
         }
         else                    //Other error
         {
@@ -171,6 +188,7 @@ public class MainActivity extends AppCompatActivity {
     //Changes to the scanning screen
     private void StartScanActivity()
     {
+        MemberDatabase.instance = null;
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
