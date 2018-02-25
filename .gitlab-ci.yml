@@ -13,14 +13,14 @@ cache:
      - .gradle/
 
 stages:
-  - test
+  # - test
   - build
   - deploy
 
-test:
-  stage: test
-  script:
-     - cd AMIV-Legiscanner && ./gradlew check && cd ..
+# test:
+#   stage: test
+#   script:
+#      - cd AMIV-Legiscanner && ./gradlew check && cd ..
 
 build:
   stage: build
@@ -32,6 +32,7 @@ build:
 
 deploy:
   stage: deploy
+  when: manual
   script:
      - echo $PLAYSTORE_KEY > AMIV-Legiscanner/keystores/google-play.json
      - cd android && ./gradlew publishRelease && cd ..
