@@ -7,7 +7,7 @@ android {
 
     playAccountConfigs {
         defaultAccountConfig {
-            jsonFile = file('keystores/google-play.json')
+            jsonFile = file('google-play-key.json')
         }
     }
 
