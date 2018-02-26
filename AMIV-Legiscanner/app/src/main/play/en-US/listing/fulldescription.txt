@@ -1,0 +1,10 @@
+The app is intended for use by event organisers and helpers to manage attendance or check for valid registrations at AMIV events. Use the app on several devices in conjunction with the AMIV Check-In website.
+
+The app will scan the barcode on the ETH Legi and then check if that person is registered for the AMIV event/PVK or add them to the list of participants in case of the general assembly.
+
+Quick Guide:
+1. The event organiser needs to activate the event on the check-in website in order to generate a pin.
+2. This pin can then be entered in the app on several devices simultaneously.
+3. App users can scan barcodes or enter Legi numbers manually and will then get a response about whether the person has registered for the event or not.
+4. Users can also check the complete list of users and their status as on the website.
+

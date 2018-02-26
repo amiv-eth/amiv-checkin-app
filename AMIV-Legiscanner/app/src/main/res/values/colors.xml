@@ -5,5 +5,4 @@
     <color name="colorAccent">#5D78C1</color>
     <color name="colorValid">#FF669900</color>
     <color name="colorInvalid">#FFCC0000</color>
-    <color name="colorInactive">#51515100</color>
 </resources>

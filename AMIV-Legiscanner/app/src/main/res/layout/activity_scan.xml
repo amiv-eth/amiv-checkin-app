@@ -8,7 +8,7 @@
     tools:layout_editor_absoluteY="81dp">
 
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout
         android:id="@+id/CameraLayout"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -267,6 +267,7 @@
         android:layout_marginBottom="32dp"
         android:layout_marginEnd="32dp"
         android:clickable="true"
+        android:focusable="true"
         android:onClick="StartMemberListActivity"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"

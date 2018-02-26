@@ -34,12 +34,13 @@ public class CustomListAdapter extends ArrayAdapter {
         TextView checkinField = (TextView) rowView.findViewById(R.id.checkinStatus);
         TextView membershipField = (TextView) rowView.findViewById(R.id.infoField2);
 
-        nameField.setText(members.get(position).firstname + " " + members.get(position).lastname);
-        infoField.setText(members.get(position).legi);
-        checkinField.setText((members.get(position).checkedIn ? "In" : "Out"));
+        Member m = members.get(position);
+        nameField.setText(m.firstname + " " + m.lastname);
+        infoField.setText(m.legi);
+        checkinField.setText((m.checkedIn ? "In" : "Out"));
 
-        if(MemberDatabase.instance != null && MemberDatabase.instance.eventType == MemberDatabase.EventType.Event.GV && members.get(position).membership.length() > 1)
-            membershipField.setText(members.get(position).membership.substring(0,1).toUpperCase() + members.get(position).membership.substring(1));
+        if(MemberDatabase.instance != null && MemberDatabase.instance.eventType == MemberDatabase.EventType.Event.GV && m.membership.length() > 1)
+            membershipField.setText(m.membership.substring(0,1).toUpperCase() + m.membership.substring(1));
         else
             membershipField.setText("");
 

@@ -15,11 +15,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 public class SettingsActivity extends AppCompatActivity {
+    private static String DEF_URL = "https://checkin.amiv.ethz.ch";    //NOTE: Set default value before build, also change the 'checkin_server_url' string in strings.xml to adapt UI
+
     //Vars for saving/reading the url from shared prefs, to allow saving between sessions. For each variable, have a key to access it and a default value
     private static SharedPreferences SHARED_PREFS;
     private static String SHARED_PREFS_KEY = "com.amivlegiscanner.app";
     private static String URL_PREF_KEY = "com.amivlegiscanner.app.serverurl";
-    private static String DEF_URL = "https://checkin.amiv.ethz.ch";    //NOTE: Set default value before build
     private static String AUTO_UPDATE_STATS_PREF_KEY = "com.amivlegiscanner.app.autorefresh";
     public static boolean DEF_AUTO_UPDATE_STATS = true;
     private static String REFRESH_FREQUENCY_KEY = "com.amivlegiscanner.app.refreshfrequency";
