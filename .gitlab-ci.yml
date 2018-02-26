@@ -35,4 +35,4 @@ deploy:
   when: manual
   script:
      - echo $PLAYSTORE_KEY > AMIV-Legiscanner/google-play-key.json
-     - cd android && ./gradlew publishRelease && cd ..
+     - cd AMIV-Legiscanner && ./gradlew publishRelease && cd ..
