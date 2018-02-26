@@ -1,8 +1,16 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.github.triplet.play'
 
 android {
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
+
+    playAccountConfigs {
+        defaultAccountConfig {
+            jsonFile = file('keystores/google-play.json')
+        }
+    }
+
     defaultConfig {
         applicationId "ch.amiv.legiscanner.amivlegiscanner"
         minSdkVersion 19
@@ -13,6 +21,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
         setProperty("archivesBaseName", "AMIV-LegiSanner-$versionName")
+        playAccountConfig = playAccountConfigs.defaultAccountConfig
     }
     buildTypes {
         release {
@@ -36,4 +45,10 @@ dependencies {
 
     //implementation 'com.google.android.gms:play-services:11.8.0' //Bundled version of google play libaries, only use required libaries, see https://stackoverflow.com/questions/43407318/how-to-suppress-the-avoid-using-bundled-version-of-google-play-services-sdk-wa/43407398
     implementation 'com.google.android.gms:play-services-vision:11.8.0'
+}
+
+play {
+    track = 'production'
+    uploadImages = true
+    errorOnSizeLimit = true
 }
