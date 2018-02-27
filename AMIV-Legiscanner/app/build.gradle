@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 apply plugin: 'com.github.triplet.play'
 
 // Load keystore
-def keystorePropertiesFile = rootProject.file("keystore.properties");
+def keystorePropertiesFile = file("keystore.properties");
 def keystoreProperties = new Properties()
 keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 
@@ -37,11 +37,17 @@ android {
         setProperty("archivesBaseName", "AMIV-LegiSanner-$versionName")
         playAccountConfig = playAccountConfigs.defaultAccountConfig
     }
+
     buildTypes {
         release {
-            minifyEnabled false
+            signingConfig signingConfigs.release
+	    minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+
+    lintOptions {
+        abortOnError false
     }
 }
 
