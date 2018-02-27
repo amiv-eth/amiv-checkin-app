@@ -1,4 +1,4 @@
-package ch.amiv.legiscanner.amivlegiscanner;
+package ch.amiv.checkin;
 
 import android.app.Activity;
 import android.view.LayoutInflater;

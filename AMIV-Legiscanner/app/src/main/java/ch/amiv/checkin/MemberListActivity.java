@@ -1,4 +1,4 @@
-package ch.amiv.legiscanner.amivlegiscanner;
+package ch.amiv.checkin;
 
 import android.os.Bundle;
 import android.os.Handler;

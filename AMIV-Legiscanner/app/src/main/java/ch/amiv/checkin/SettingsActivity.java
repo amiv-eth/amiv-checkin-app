@@ -1,4 +1,4 @@
-package ch.amiv.legiscanner.amivlegiscanner;
+package ch.amiv.checkin;
 
 /**
  * Author: Roger Barton, rbarton@ethz.ch

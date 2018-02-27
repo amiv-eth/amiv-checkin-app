@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="ch.amiv.legiscanner.amivlegiscanner">
+    package="ch.amiv.checkin">
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -19,7 +19,7 @@
         android:screenOrientation="portrait"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+        <activity android:name="ch.amiv.checkin.MainActivity"
             android:screenOrientation="portrait">
 
             <intent-filter>
@@ -28,11 +28,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ScanActivity"
+        <activity android:name="ch.amiv.checkin.ScanActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".SettingsActivity"
+        <activity android:name="ch.amiv.checkin.SettingsActivity"
             android:screenOrientation="portrait" />
-        <activity android:name=".MemberListActivity" />
+        <activity android:name="ch.amiv.checkin.MemberListActivity" />
     </application>
 
 </manifest>

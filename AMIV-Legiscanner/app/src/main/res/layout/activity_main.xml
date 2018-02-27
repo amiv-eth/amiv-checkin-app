@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="ch.amiv.legiscanner.amivlegiscanner.MainActivity"
+    tools:context="ch.amiv.checkin.MainActivity"
     tools:layout_editor_absoluteY="81dp">
 
     <EditText

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">AMIV Legi Scanner</string>
+    <string name="app_name">AMIV Check-in</string>
     <string name="check_in">Check-In</string>
     <string name="check_out">Check-Out</string>
     <string name="submit">Submit</string>
