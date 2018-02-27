@@ -4,10 +4,10 @@ before_script:
   - sdkmanager "platforms;android-27"
   - sdkmanager "build-tools;27.0.3"
   - export GRADLE_USER_HOME=`pwd`/.gradle
-  - chmod +x ./AMIV-Legiscanner/gradlew
+  - chmod +x ./gradlew
   - npm install
-  - echo $PLAYSTORE_KEY > AMIV-Legiscanner/app/google-play-key.json
-  - echo $SIGNING_KEYSTORE > AMIV-Legiscanner/app/keystore.properties
+  - echo $PLAYSTORE_KEY > app/google-play-key.json
+  - echo $SIGNING_KEYSTORE > app/keystore.properties
 
 cache:
   key: "$CI_COMMIT_REF_NAME"
@@ -15,19 +15,19 @@ cache:
      - .gradle/
 
 stages:
-  # - test
+  - test
   - build
   - deploy
 
-# test:
-#   stage: test
-#   script:
-#      - cd AMIV-Legiscanner && ./gradlew check && cd ..
+test:
+  stage: test
+  script:
+     - ./gradlew check
 
 build:
   stage: build
   script:
-     - cd AMIV-Legiscanner && ./gradlew assembleRelease && cd ..
+     - ./gradlew assembleRelease
   artifacts:
     paths:
       - AMIV-Legiscanner/app/build/outputs/
@@ -36,4 +36,4 @@ deploy:
   stage: deploy
   when: manual
   script:
-     - cd AMIV-Legiscanner && ./gradlew publishRelease && cd ..
+     - ./gradlew publishRelease
