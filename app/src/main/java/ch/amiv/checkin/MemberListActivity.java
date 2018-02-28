@@ -15,9 +15,9 @@ import android.widget.ListView;
 public class MemberListActivity extends AppCompatActivity {
 
     private ListView mListview;
-    CustomListAdapter adapter;
-    final Handler handler = new Handler();  //similar as in scanActivity, to keep refreshing the data
-    Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
+    private CustomListAdapter adapter;
+    private final Handler handler = new Handler();  //similar as in scanActivity, to keep refreshing the data
+    private Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
         public void run() {
             ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.MemberDBUpdatedCallback() {
@@ -39,7 +39,7 @@ public class MemberListActivity extends AppCompatActivity {
         UpdateList();
     }
 
-    public void InitialiseListView ()
+    private void InitialiseListView()
     {
         if(MemberDatabase.instance.members == null) {
             MemberDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
@@ -47,12 +47,12 @@ public class MemberListActivity extends AppCompatActivity {
 
         adapter = new CustomListAdapter(this, MemberDatabase.instance.members);
 
-        mListview = (ListView) findViewById(R.id.listView);
+        mListview = findViewById(R.id.listView);
         mListview.setAdapter(adapter);
         mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                int itemPos = position;
+                //int itemPos = position;
                 //String itemValue = (String) mListview.getItemAtPosition(itemPos);
             }
         });
@@ -70,7 +70,7 @@ public class MemberListActivity extends AppCompatActivity {
         handler.postDelayed(refreshMemberDB, 0);
     }
 
-    public void UpdateList()
+    private void UpdateList()
     {
         if(mListview == null)
             InitialiseListView();

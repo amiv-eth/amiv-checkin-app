@@ -48,7 +48,7 @@ public final class ServerRequests {
                 (JSONObject) null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.e("postrequest", "JSON file response received.");
+                Log.e("postrequest", "MemberDb JSON file response received.");
 
                 // Parsing json object response and save to the static memberDB
                 try {

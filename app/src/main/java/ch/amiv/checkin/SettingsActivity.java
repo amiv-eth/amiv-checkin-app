@@ -24,22 +24,22 @@ public class SettingsActivity extends AppCompatActivity {
     private static String AUTO_UPDATE_STATS_PREF_KEY = "com.amivlegiscanner.app.autorefresh";
     public static boolean DEF_AUTO_UPDATE_STATS = true;
     private static String REFRESH_FREQUENCY_KEY = "com.amivlegiscanner.app.refreshfrequency";
-    public static float DEF_REFRESH_FREQUENCY = 6f;
+    public static float DEF_REFRESH_FREQUENCY = 20f;
 
-    EditText mUrlField;
-    CheckBox mAutoRefreshCheck;
-    EditText mRefreshFreqField;
+    private EditText mUrlField;
+    private CheckBox mAutoRefreshCheck;
+    private EditText mRefreshFreqField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
 
-        mUrlField = (EditText)findViewById(R.id.UrlField);
+        mUrlField = findViewById(R.id.UrlField);
         mUrlField.setText(GetServerURL(getApplicationContext()));
-        mAutoRefreshCheck = (CheckBox)findViewById(R.id.autoRefreshCheck);
+        mAutoRefreshCheck = findViewById(R.id.autoRefreshCheck);
         mAutoRefreshCheck.setChecked(GetAutoRefresh(getApplicationContext()));
-        mRefreshFreqField = (EditText) findViewById(R.id.refreshFreqField);
+        mRefreshFreqField = findViewById(R.id.refreshFreqField);
         mRefreshFreqField.setText((Float.toString(GetRefreshFrequency(getApplicationContext()) / 1000f)));
     }
 

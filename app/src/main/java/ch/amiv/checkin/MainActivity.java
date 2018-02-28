@@ -29,11 +29,10 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     public static String CurrentPin;
-    boolean mWaitingOnServer = false;
-    RequestQueue queue;
+    private boolean mWaitingOnServer = false;
 
-    EditText mPinField;
-    TextView mInvalidPinLabel;
+    private EditText mPinField;
+    private TextView mInvalidPinLabel;
     public static Vibrator vibrator;
 
     @Override
@@ -41,8 +40,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPinField = (EditText)findViewById(R.id.PinField);
-        mInvalidPinLabel = (TextView) findViewById(R.id.InvalidPinLabel);
+        mPinField = findViewById(R.id.PinField);
+        mInvalidPinLabel = findViewById(R.id.InvalidPinLabel);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         mPinField.setOnKeyListener(new View.OnKeyListener() {

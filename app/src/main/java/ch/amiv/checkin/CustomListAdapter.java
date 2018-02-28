@@ -13,13 +13,13 @@ import java.util.List;
  * Created by Roger on 06-Feb-18.
  */
 
-public class CustomListAdapter extends ArrayAdapter {
+public class CustomListAdapter extends ArrayAdapter<Member> {
     private final Activity context;
     private final List<Member> members;
 
     public CustomListAdapter(Activity context, List<Member> _members){
 
-        super(context,R.layout.listview_item, _members);
+        super(context, R.layout.listview_item, _members);
 
         this.context = context;
         this.members = _members;
@@ -29,10 +29,10 @@ public class CustomListAdapter extends ArrayAdapter {
         LayoutInflater inflater = context.getLayoutInflater();
         View rowView = inflater.inflate(R.layout.listview_item, null,true);
 
-        TextView nameField = (TextView) rowView.findViewById(R.id.nameField);
-        TextView infoField = (TextView) rowView.findViewById(R.id.infoField);
-        TextView checkinField = (TextView) rowView.findViewById(R.id.checkinStatus);
-        TextView membershipField = (TextView) rowView.findViewById(R.id.infoField2);
+        TextView nameField = rowView.findViewById(R.id.nameField);
+        TextView infoField = rowView.findViewById(R.id.infoField);
+        TextView checkinField = rowView.findViewById(R.id.checkinStatus);
+        TextView membershipField = rowView.findViewById(R.id.infoField2);
 
         Member m = members.get(position);
         nameField.setText(m.firstname + " " + m.lastname);
@@ -46,5 +46,5 @@ public class CustomListAdapter extends ArrayAdapter {
 
         return rowView;
 
-    };
+    }
 }

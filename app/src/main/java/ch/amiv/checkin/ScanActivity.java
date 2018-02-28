@@ -6,10 +6,10 @@ package ch.amiv.checkin;
  */
 
 import android.Manifest;
+import android.app.ActionBar;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -43,16 +43,14 @@ import java.util.Map;
 public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
 
-    boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
-    boolean mCheckInOnLastBarcode = true;
-    String mLastBarcodeScanned = "00000000";
-    boolean mAllowNextBarcode = true;
-    boolean mCanClearResponse = true;
+    private boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
+    private boolean mAllowNextBarcode = true;
+    private boolean mCanClearResponse = true;
 
     //----Server Communication-----
-    boolean mWaitingOnServer = false;
-    Handler handler = new Handler();    //Used for delaying function calls, in conjunction with runnables
-    Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
+    private boolean mWaitingOnServer_LegiSubmit = false;
+    private Handler handler = new Handler();    //Used for delaying function calls, in conjunction with runnables
+    private Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
         public void run() {
             RefreshMemberDB();
@@ -62,28 +60,27 @@ public class ScanActivity extends AppCompatActivity {
     };
 
     //-----UI Elements----
-    Switch mCheckInSwitch;
-    EditText mLegiInputField;
-    TextView mWaitLabel;
-    TextView mValidLabel;
-    TextView mInvalidLabel;
-    TextView mServerErrorLabel;
-    ImageView mTickImage;
-    ImageView mCrossImage;
-    ImageView mBGTint;
-    FloatingActionButton mStartMemberListActivity;
+    private Switch mCheckInSwitch;
+    private EditText mLegiInputField;
+    private TextView mWaitLabel;
+    private TextView mValidLabel;
+    private TextView mInvalidLabel;
+    private TextView mServerErrorLabel;
+    private ImageView mTickImage;
+    private ImageView mCrossImage;
+    private ImageView mBGTint;
 
     //Stats UI
-    TextView mLeftStatLabel;
-    TextView mRightStatLabel;
-    TextView mLeftStatDesc;
-    TextView mRightStatDesc;
+    private TextView mLeftStatLabel;
+    private TextView mRightStatLabel;
+    private TextView mLeftStatDesc;
+    private TextView mRightStatDesc;
 
     //-----Barcode Scanning Related----
-    BarcodeDetector mBarcodeDetector;
-    CameraSource mCameraSource;
-    SurfaceView mCameraView;
-    TextView mBarcodeInfo;
+    private BarcodeDetector mBarcodeDetector;
+    private CameraSource mCameraSource;
+    private SurfaceView mCameraView;
+    private TextView mBarcodeInfo;
 
 
     @Override
@@ -92,29 +89,28 @@ public class ScanActivity extends AppCompatActivity {
         setContentView(R.layout.activity_scan);
 
         //----Initialising UI-----
-        mStartMemberListActivity = (FloatingActionButton)findViewById(R.id.ShowMemberList);
-        mLegiInputField = (EditText)findViewById(R.id.LegiInputField);
-        mCheckInSwitch = (Switch)findViewById(R.id.CheckInSwitch);
+        mLegiInputField = findViewById(R.id.LegiInputField);
+        mCheckInSwitch = findViewById(R.id.CheckInSwitch);
         mCheckInSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 mIsCheckingIn = isChecked;
             }
         });
-        mWaitLabel = (TextView)findViewById(R.id.PleaseWaitLabel);
-        mValidLabel = (TextView)findViewById(R.id.ValidLabel);
-        mInvalidLabel = (TextView)findViewById(R.id.InvalidLabel);
-        mServerErrorLabel = (TextView)findViewById(R.id.ServerErrorLabel);
-        mTickImage = (ImageView)findViewById(R.id.TickImage);
-        mCrossImage = (ImageView)findViewById(R.id.CrossImage);
-        mBGTint = (ImageView)findViewById(R.id.BackgroundTint);
+        mWaitLabel = findViewById(R.id.PleaseWaitLabel);
+        mValidLabel = findViewById(R.id.ValidLabel);
+        mInvalidLabel = findViewById(R.id.InvalidLabel);
+        mServerErrorLabel = findViewById(R.id.ServerErrorLabel);
+        mTickImage = findViewById(R.id.TickImage);
+        mCrossImage = findViewById(R.id.CrossImage);
+        mBGTint = findViewById(R.id.BackgroundTint);
         mBGTint.setAlpha(0.4f);
 
-        mLeftStatLabel = (TextView)findViewById(R.id.LeftStatLabel);
-        mRightStatLabel = (TextView)findViewById(R.id.RightStatLabel);
-        mLeftStatDesc = (TextView)findViewById(R.id.LeftStatDescription);
-        mRightStatDesc = (TextView)findViewById(R.id.RightStatDescription);
+        mLeftStatLabel = findViewById(R.id.LeftStatLabel);
+        mRightStatLabel = findViewById(R.id.RightStatLabel);
+        mLeftStatDesc = findViewById(R.id.LeftStatDescription);
+        mRightStatDesc = findViewById(R.id.RightStatDescription);
 
-        RelativeLayout mCameraLayout = (RelativeLayout) findViewById(R.id.CameraLayout);
+        RelativeLayout mCameraLayout = findViewById(R.id.CameraLayout);
         mCameraLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -126,8 +122,8 @@ public class ScanActivity extends AppCompatActivity {
         });
 
         //----Setting up Camera and barcode tracking with callbacks------
-        mCameraView = (SurfaceView)findViewById(R.id.CameraView);
-        mBarcodeInfo = (TextView)findViewById(R.id.BarcodeOutput);
+        mCameraView = findViewById(R.id.CameraView);
+        mBarcodeInfo = findViewById(R.id.BarcodeOutput);
 
         mBarcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.CODE_39).build();                 //IMPORTANT: Set the correct format for the barcode reader, can choose all formats but will be slower
         CameraSource.Builder camBuilder= new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(640, 480);
@@ -177,8 +173,6 @@ public class ScanActivity extends AppCompatActivity {
 
                     mAllowNextBarcode = false;  //prevent the same barcode being submitted in the next frame until this is set to true again in the postDelayed call
                     mCanClearResponse = false;
-                    mLastBarcodeScanned = barcodes.valueAt(0).displayValue;
-                    mCheckInOnLastBarcode = mIsCheckingIn;
 
                     mBarcodeInfo.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
                         public void run() {
@@ -221,6 +215,9 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void SubmitLegiNrFromTextField(View view)
     {
+        if(mWaitingOnServer_LegiSubmit)
+            return;
+
         String s = mLegiInputField.getText().toString();
         if("".equals(s))
             return;
@@ -236,6 +233,9 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void SubmitLegiNrToServer(String leginr)
     {
+        if(mWaitingOnServer_LegiSubmit)
+            return;
+
         MainActivity.vibrator.vibrate(50);
 
         if(!ServerRequests.CheckConnection(getApplicationContext())) {
@@ -362,7 +362,7 @@ public class ScanActivity extends AppCompatActivity {
      */
     private void SetWaitingOnServer (boolean isWaiting)
     {
-        mWaitingOnServer = isWaiting;
+        mWaitingOnServer_LegiSubmit = isWaiting;
         mWaitLabel.setVisibility((isWaiting ? View.VISIBLE : View.INVISIBLE));
     }
 
