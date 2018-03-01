@@ -20,6 +20,7 @@ Alternatively:
 5. The barcodes will be scanned as soon as the barcode is in focus.
 
 ### Structure (for developers)
+For bugs, create an issue report. For questions regarding the app (not website or server-side) contact developer: rbarton@ethz.ch
 The app has been developed for simplicity and ease of use, everything complex is on the website/server project [here](https://gitlab.ethz.ch/amiv/amiv-checkin). 
 The app mainly scans and sends legi numbers to the server and then shows the response.
 
