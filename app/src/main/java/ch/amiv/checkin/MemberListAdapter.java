@@ -58,6 +58,15 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
     }
 
+    public static class SpaceHolder extends RecyclerView.ViewHolder {
+        View space;
+
+        public SpaceHolder(View view) {
+            super(view);
+            space = view.findViewById(R.id.space);
+        }
+    }
+
     public MemberListAdapter(List<Member> _members, List<KeyValuePair> _stats, List<KeyValuePair> _eventInfos) {
         headerList.add("Stats");
         headerList.add("People");
@@ -93,6 +102,10 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_stat, parent, false);
                 holder = new KeyValueHolder(view);
                 break;
+            case 4: //space
+                view = LayoutInflater.from(parent.getContext()).inflate(R.layout.list_item_space, parent, false);
+                holder = new SpaceHolder(view);
+                break;
         }
         if(view == null)
             Log.e("recyclerView", "Unhandled viewType found, type: " + viewType);
@@ -112,8 +125,10 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
             return 2;   //Member
         else if(position == statList.size() + memberList.size() + 2)
             return 0;   //infos header
-        else
+        else if (position < getItemCount() -1)
             return 3;   //event Info
+        else
+            return 4;   //Space
     }
 
     /**
@@ -153,12 +168,16 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 infoHolder.nameField.setText(info.name);
                 infoHolder.valueField.setText(info.value);
                 break;
+            case 4:
+                SpaceHolder spaceHolder = (SpaceHolder)holder;
+                //Add resizing of space if necessary
+                break;
         }
     }
 
     @Override
     public int getItemCount() {
-        return memberList.size() + statList.size() + eventInfoList.size() + headerList.size();
+        return memberList.size() + statList.size() + eventInfoList.size() + headerList.size() + 1;  //+1 for space
     }
 
     private int GetHeaderIndex(int position)
