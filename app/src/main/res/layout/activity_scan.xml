@@ -238,7 +238,7 @@
         android:textAlignment="viewStart"
         android:textColor="@android:color/holo_green_dark"
         android:textSize="28sp"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/TickImage" />
 
@@ -254,7 +254,7 @@
         android:textAlignment="viewEnd"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="28sp"
-        android:visibility="visible"
+        android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/TickImage" />
 
