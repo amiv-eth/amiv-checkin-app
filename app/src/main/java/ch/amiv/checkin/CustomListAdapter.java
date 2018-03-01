@@ -19,7 +19,7 @@ public class CustomListAdapter extends ArrayAdapter<Member> {
 
     public CustomListAdapter(Activity context, List<Member> _members){
 
-        super(context, R.layout.listview_item, _members);
+        super(context, R.layout.list_item_member, _members);
 
         this.context = context;
         this.members = _members;
@@ -27,7 +27,7 @@ public class CustomListAdapter extends ArrayAdapter<Member> {
 
     public View getView(int position, View view, ViewGroup parent) {
         LayoutInflater inflater = context.getLayoutInflater();
-        View rowView = inflater.inflate(R.layout.listview_item, null,true);
+        View rowView = inflater.inflate(R.layout.list_item_member, null,true);
 
         TextView nameField = rowView.findViewById(R.id.nameField);
         TextView infoField = rowView.findViewById(R.id.infoField);

@@ -4,20 +4,25 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
 /**
  * This activity is for displaying the list of signed in members, similar to what is seen in the checkin website in the other amiv checkin project.
- * Mostly handles updating the data by fetching from the server and then updating the listview. Note the list view is customised, ie the individual item, this is what the CustomListAdapter class and listview_item.xml are for
+ * Mostly handles updating the data by fetching from the server and then updating the listview. Note the list view is customised, ie the individual item, this is what the CustomListAdapter class and list_item_memberber.xml are for
  */
 
 public class MemberListActivity extends AppCompatActivity {
 
-    private ListView mListview;
-    private CustomListAdapter adapter;
+    RecyclerView mRecylerView;
+    RecyclerView.Adapter mRecylcerAdaper;
+    RecyclerView.LayoutManager mRecyclerLayoutAdapter;
+
     private final Handler handler = new Handler();  //similar as in scanActivity, to keep refreshing the data
     private Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
@@ -51,17 +56,23 @@ public class MemberListActivity extends AppCompatActivity {
             EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
         }
 
-        adapter = new CustomListAdapter(this, EventDatabase.instance.members);
+        //recycler view stuff ===========
+        mRecylerView = findViewById(R.id.recyclerView);
 
-        mListview = findViewById(R.id.listView);
-        mListview.setAdapter(adapter);
-        mListview.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                //int itemPos = position;
-                //String itemValue = (String) mListview.getItemAtPosition(itemPos);
-            }
-        });
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        mRecylerView.setHasFixedSize(true);
+
+        // use a linear layout manager
+        mRecyclerLayoutAdapter = new LinearLayoutManager(this);
+        mRecylerView.setLayoutManager(mRecyclerLayoutAdapter);
+
+        // specify an adapter (see also next example)
+        mRecylcerAdaper = new MemberListAdapter(EventDatabase.instance.members, EventDatabase.instance.stats, EventDatabase.instance.eventData.GetInfosAsKeyValuePairs());
+        mRecylerView.setLayoutAnimation(AnimationUtils.loadLayoutAnimation(this, R.anim.layout_anim_falldown));
+        mRecylerView.setAdapter(mRecylcerAdaper);
+
+        AnimateList(null);
     }
 
     @Override
@@ -76,11 +87,30 @@ public class MemberListActivity extends AppCompatActivity {
         handler.postDelayed(refreshMemberDB, 0);
     }
 
+    /**
+     * @param view Used to allow UI elems to call this, pass null otherwise
+     */
+    public void AnimateList(View view)
+    {
+        this.runOnUiThread(new Runnable() {
+            public void run() {
+                mRecylerView.invalidate();
+                mRecylerView.scheduleLayoutAnimation();
+            }
+        });
+    }
+
     private void UpdateList()
     {
-        if(mListview == null)
+        if(mRecylerView == null)
             InitialiseListView();
 
-        adapter.notifyDataSetChanged();
+        mRecylcerAdaper.notifyDataSetChanged();
+    }
+
+    public void RefreshListData(View view)
+    {
+        refreshMemberDB.run();
+        AnimateList(view);
     }
 }

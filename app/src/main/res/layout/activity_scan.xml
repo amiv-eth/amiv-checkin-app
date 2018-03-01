@@ -269,10 +269,11 @@
         android:clickable="true"
         android:focusable="true"
         android:onClick="StartMemberListActivity"
+        android:tint="@android:color/white"
         app:backgroundTint="@color/colorPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@android:drawable/ic_menu_sort_by_size" />
+        app:srcCompat="@drawable/ic_format_list_bulleted_black_24dp" />
 
     <TextView
         android:id="@+id/LeftStatDescription"
