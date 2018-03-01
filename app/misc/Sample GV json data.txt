@@ -1,4 +1,15 @@
 {
+"eventinfos":{
+    "_id":"1"
+    ,"description":"Bla Blupp Do stuff\r\n"
+    ,"event_type":"AMIV General Assemblies"
+    ,"signup_count":5
+    ,"spots":0
+    ,"time_start":"Fri, 05 Jan 2018 21:20:48 GMT"
+    ,"title":"Test GV"
+}
+,
+{
 "signups":[
 	{
 		"checked_in":false

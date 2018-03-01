@@ -6,11 +6,11 @@ package ch.amiv.checkin;
  */
 
 import android.Manifest;
-import android.app.ActionBar;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +18,7 @@ import android.util.SparseArray;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -86,6 +87,7 @@ public class ScanActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.activity_scan);
 
         //----Initialising UI-----
@@ -276,12 +278,14 @@ public class ScanActivity extends AppCompatActivity {
 
             @Override
             protected VolleyError parseNetworkError(VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                final VolleyError ve = volleyError;
-                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
-                    public void run() {
-                        SetUIFromResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
-                    }
-                });
+                if(volleyError != null && volleyError.networkResponse != null) {
+                    final VolleyError ve = volleyError;
+                    mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                        public void run() {
+                            SetUIFromResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
+                        }
+                    });
+                }
 
                 return super.parseNetworkError(volleyError);
             }
@@ -373,15 +377,18 @@ public class ScanActivity extends AppCompatActivity {
      */
     private void RefreshMemberDB()
     {
-        if(MemberDatabase.instance == null)
-            MemberDatabase.instance = new MemberDatabase();
+        if(EventDatabase.instance == null)
+            EventDatabase.instance = new EventDatabase();
 
         ServerRequests.UpdateMemberDB(getApplicationContext(),
-                new ServerRequests.MemberDBUpdatedCallback(){
+                new ServerRequests.OnDataReceivedCallback(){
                     @Override
-                    public void OnMDBUpdated()
+                    public void OnDataReceived()
                     {
                         UpdateStatsUI();
+                        ActionBar actionBar = getSupportActionBar();
+                        if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
+                            actionBar.setTitle(EventDatabase.instance.eventData.name);
                     }
                 });
     }
@@ -391,24 +398,24 @@ public class ScanActivity extends AppCompatActivity {
      */
     public void UpdateStatsUI()
     {
-        if(MemberDatabase.instance == null)
+        if(EventDatabase.instance == null)
             return;
 
-        if(MemberDatabase.instance.eventType == MemberDatabase.EventType.Event)
+        if(EventDatabase.instance.eventData.eventType == EventData.EventType.Event)
         {
-            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
             mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mRightStatLabel.setText("" + (MemberDatabase.instance.totalSignups - MemberDatabase.instance.currentAttendance));
+            mRightStatLabel.setText("" + (EventDatabase.instance.totalSignups - EventDatabase.instance.currentAttendance));
             mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
 
             mLeftStatDesc.setText("Current");
             mRightStatDesc.setText("Remaining");
         }
-        else if(MemberDatabase.instance.eventType == MemberDatabase.EventType.GV)
+        else if(EventDatabase.instance.eventData.eventType == EventData.EventType.GV)
         {
-            mLeftStatLabel.setText("" + MemberDatabase.instance.currentAttendance);
+            mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
             mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mRightStatLabel.setText("" + MemberDatabase.instance.regularMembers);
+            mRightStatLabel.setText("" + EventDatabase.instance.regularMembers);
             mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
 
             mLeftStatDesc.setText("Current");

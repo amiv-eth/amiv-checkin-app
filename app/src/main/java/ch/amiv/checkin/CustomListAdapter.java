@@ -39,7 +39,7 @@ public class CustomListAdapter extends ArrayAdapter<Member> {
         infoField.setText(m.legi);
         checkinField.setText((m.checkedIn ? "In" : "Out"));
 
-        if(MemberDatabase.instance != null && MemberDatabase.instance.eventType == MemberDatabase.EventType.Event.GV && m.membership.length() > 1)
+        if(EventDatabase.instance != null && EventDatabase.instance.eventData.eventType == EventData.EventType.GV && m.membership.length() > 1)
             membershipField.setText(m.membership.substring(0,1).toUpperCase() + m.membership.substring(1));
         else
             membershipField.setText("");

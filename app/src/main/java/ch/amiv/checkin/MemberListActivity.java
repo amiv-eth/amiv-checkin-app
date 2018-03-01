@@ -2,8 +2,10 @@ package ch.amiv.checkin;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -20,10 +22,13 @@ public class MemberListActivity extends AppCompatActivity {
     private Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
         public void run() {
-            ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.MemberDBUpdatedCallback() {
+            ServerRequests.UpdateMemberDB(getApplicationContext(), new ServerRequests.OnDataReceivedCallback() {
                 @Override
-                public void OnMDBUpdated() {
+                public void OnDataReceived() {
                     UpdateList();
+                    ActionBar actionBar = getSupportActionBar();
+                    if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
+                        actionBar.setTitle(EventDatabase.instance.eventData.name);
                 }
             });
             if(SettingsActivity.GetAutoRefresh(getApplicationContext()))
@@ -34,6 +39,7 @@ public class MemberListActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.activity_member_list);
 
         UpdateList();
@@ -41,11 +47,11 @@ public class MemberListActivity extends AppCompatActivity {
 
     private void InitialiseListView()
     {
-        if(MemberDatabase.instance.members == null) {
-            MemberDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
+        if(EventDatabase.instance.members == null) {
+            EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
         }
 
-        adapter = new CustomListAdapter(this, MemberDatabase.instance.members);
+        adapter = new CustomListAdapter(this, EventDatabase.instance.members);
 
         mListview = findViewById(R.id.listView);
         mListview.setAdapter(adapter);

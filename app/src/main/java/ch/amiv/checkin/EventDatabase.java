@@ -13,12 +13,11 @@ import java.util.List;
  * Contains all the data received by the server with GET /checkin_update_data in a android friendly format. The JSON file received by the server fills this.
  * See README_API on the server side repo
  */
-public class MemberDatabase {
-    public static MemberDatabase instance;
-    public enum EventType {GV, Event, none}
-    public EventType eventType = EventType.none;
+public class EventDatabase {
+    public static EventDatabase instance;
 
     final List<Member> members = new ArrayList<Member>();
+    public EventData eventData = new EventData();
 
     //-----Statistics------
     public int totalSignups;        //For Events
@@ -30,7 +29,7 @@ public class MemberDatabase {
     public int totalNonMembers;
     public int maxAttendance;
 
-    public MemberDatabase ()
+    public EventDatabase()
     {
         if(instance != null)
             Log.e("memberDatabase", "A Member Database already exists, cannot create another. Should delete old MemberDB if this is wanted");

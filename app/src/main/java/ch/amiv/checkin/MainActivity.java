@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
         mWaitingOnServer = false;
         mPinField.setText("");  //clear pin field
         mInvalidPinLabel.setVisibility(View.INVISIBLE);
-        MemberDatabase.instance = null;
+        EventDatabase.instance = null;
     }
 
     /**
@@ -113,15 +113,17 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             protected VolleyError parseNetworkError(final VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                final VolleyError ve = volleyError;
-                mPinField.post(new Runnable() {
-                    public void run() {
-                        if(ve != null && ve.networkResponse != null)
-                            ApplyServerResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
-                        else
-                            InvalidUrlResponse();
-                    }
-                });
+                if(volleyError != null && volleyError.networkResponse != null) {
+                    final VolleyError ve = volleyError;
+                    mPinField.post(new Runnable() {
+                        public void run() {
+                            if (ve != null && ve.networkResponse != null)
+                                ApplyServerResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
+                            else
+                                InvalidUrlResponse();
+                        }
+                    });
+                }
 
                 return super.parseNetworkError(volleyError);
             }
@@ -185,7 +187,15 @@ public class MainActivity extends AppCompatActivity {
     //Changes to the scanning screen
     private void StartScanActivity()
     {
-        MemberDatabase.instance = null;
+        EventDatabase.instance = null;
+        /*ServerRequests.UpdateEventData(this, new ServerRequests.OnDataReceivedCallback() {
+            @Override
+            public void OnDataReceived() {
+                if(!EventDatabase.instance.eventData.name.equals("") && getActionBar() != null)
+                    getActionBar().setTitle(EventDatabase.instance.eventData.name);
+            }
+        });*/
+
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
