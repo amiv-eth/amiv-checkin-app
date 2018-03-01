@@ -405,7 +405,7 @@ public class ScanActivity extends AppCompatActivity {
         {
             mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
             mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatDesc.setVisibility(View.VISIBLE);
+            mLeftStatLabel.setVisibility(View.VISIBLE);
             mRightStatLabel.setText("" + (EventDatabase.instance.totalSignups - EventDatabase.instance.currentAttendance));
             mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
             mRightStatLabel.setVisibility(View.VISIBLE);
@@ -417,7 +417,7 @@ public class ScanActivity extends AppCompatActivity {
         {
             mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
             mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatDesc.setVisibility(View.VISIBLE);
+            mLeftStatLabel.setVisibility(View.VISIBLE);
             mRightStatLabel.setText("" + EventDatabase.instance.regularMembers);
             mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
             mRightStatLabel.setVisibility(View.VISIBLE);
