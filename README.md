@@ -5,6 +5,9 @@ Android app for scanning legi barcodes and sending to the AMIV checkin server, s
 Used for events, PVK and GV to see if people are registered for the events or to check people in/out of the GV. Note: Several people can use the app simultaneously for the same event.
 
 ### How to Install
+**Download at the Google Play Store: https://play.google.com/store/apps/details?id=ch.amiv.checkin**
+
+Alternatively:
 1. Download using the _download link in bold (not the download icon or download zip!)_ in most recent tag [here](https://gitlab.ethz.ch/amiv/amiv-checkin-app/tags). Alternatively, view the "Legiscanner Builds\Release Build dd-mm-yy\release" Folder in the source and download the .apk file.
 2. Open the .apk file on your Android device
 3. Note: You need to temporarily allow installations from unknown sources, there should be a pop-up about this. You should turn off this setting after the installation is complete
@@ -24,3 +27,10 @@ The app consist of the following activities/screens:
 * Main - Login screen for entering an event pin
 * Scanning - Barcode scanning and receiving response from server whether a person is registered for the event or not
 * Settings - Only for manually setting the server address
+* Member List - Used to display the data: stats, event info and members. Like the checkin website.
+
+Also note the static ServerRequests, which is used to handle most (not all) requests for data from the server. The EventDatabase is also central, where all the data is stored as the name would suggest, use the static instance to access it.
+
+When updating store page content use the guidelines in: https://github.com/Triple-T/gradle-play-publisher#upload-images
+Also note to increment the version code.
+The test, build and deploy has been setup with Gitlab CI, which will test and build automatically for any new commit. You can then execute the deploy stage by going to the CI/CD>Pipelines page on the gitlab website.
