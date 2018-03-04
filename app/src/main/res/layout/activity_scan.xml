@@ -138,7 +138,7 @@
         android:layout_marginStart="20dp"
         android:layout_marginTop="8dp"
         android:ems="10"
-        android:hint="Legi Nr"
+        android:hint="Legi Nr, Nethz, Email"
         android:inputType="text"
         android:textColor="@android:color/white"
         android:textColorHint="@android:color/white"
