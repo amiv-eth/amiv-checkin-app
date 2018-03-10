@@ -32,7 +32,7 @@ public class MemberListActivity extends AppCompatActivity {
                 public void OnDataReceived() {
                     UpdateList();
                     ActionBar actionBar = getSupportActionBar();
-                    if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
+                    if(!EventDatabase.instance.eventData.name.isEmpty() && actionBar != null)
                         actionBar.setTitle(EventDatabase.instance.eventData.name);
                 }
             });
@@ -56,7 +56,7 @@ public class MemberListActivity extends AppCompatActivity {
             EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
         }
 
-        //recycler view stuff ===========
+        //=====Recycler View====
         mRecylerView = findViewById(R.id.recyclerView);
 
         // use this setting to improve performance if you know that changes
@@ -88,6 +88,7 @@ public class MemberListActivity extends AppCompatActivity {
     }
 
     /**
+     * Animation is stored in an xml in the res/anim folder, it is applied to the views in xml, this just triggers the anim
      * @param view Used to allow UI elems to call this, pass null otherwise
      */
     public void AnimateList(View view)

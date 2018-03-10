@@ -22,6 +22,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
 
     /**
      * Defining our own view holder which maps the layout items to view variables which can then later be accessed, and text value set etc
+     * For each item type we have to define a viewholder. This will map the layout to the variables
      */
     public static class MemberHolder extends RecyclerView.ViewHolder {
         TextView nameField;
@@ -77,7 +78,7 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     }
 
     /**
-     * This is used when creating a new UI list item.
+     * This is used when creating a new UI list item. Depending on the type we use a different layout xml
      */
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -113,6 +114,9 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         return holder;
     }
 
+    /**
+     * Here we map the position in the whole list to the item type, be careful with indexing and offsets
+     */
     @Override
     public int getItemViewType(int position) {      //Note stat and event info use the same layout, but types are different
         if(position == 0)
@@ -132,12 +136,10 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
     }
 
     /**
-     * This is where the data in the ui is set
+     * This is where the data in the ui is set. Note that position is the position on screen whereas getAdapterPos is the position in the whole list
      */
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-
-
         switch (holder.getItemViewType())
         {
             case 0: //header
@@ -154,8 +156,11 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 MemberHolder memberHolder = (MemberHolder)holder;
                 Member m = memberList.get(holder.getAdapterPosition() - statList.size() - 2);
                 memberHolder.nameField.setText(m.firstname + " " + m.lastname);
-                memberHolder.infoField.setText(m.legi);
                 memberHolder.checkinField.setText((m.checkedIn ? "In" : "Out"));
+                if(m.legi == null)
+                    memberHolder.infoField.setText("-");
+                else
+                    memberHolder.infoField.setText(m.legi);
 
                 if(EventDatabase.instance != null && EventDatabase.instance.eventData.eventType == EventData.EventType.GV && m.membership.length() > 1)
                     memberHolder.membershipField.setText(m.membership.substring(0,1).toUpperCase() + m.membership.substring(1));
@@ -175,11 +180,17 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
         }
     }
 
+    /**
+     * This is important for having the right amount of items in the list or else it will be cropped at the end
+     */
     @Override
     public int getItemCount() {
         return memberList.size() + statList.size() + eventInfoList.size() + headerList.size() + 1;  //+1 for space
     }
 
+    /**
+     * Will map the position in the whole list to the index in the header array.
+     */
     private int GetHeaderIndex(int position)
     {
         if(position == 0)

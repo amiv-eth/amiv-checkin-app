@@ -48,8 +48,8 @@ public class SettingsActivity extends AppCompatActivity {
      */
     public void SaveSettings(View view)
     {
-        SHARED_PREFS.edit().putString(URL_PREF_KEY, mUrlField.getText().toString());
-        SHARED_PREFS.edit().putBoolean(AUTO_UPDATE_STATS_PREF_KEY, mAutoRefreshCheck.isChecked());
+        SHARED_PREFS.edit().putString(URL_PREF_KEY, mUrlField.getText().toString()).apply();
+        SHARED_PREFS.edit().putBoolean(AUTO_UPDATE_STATS_PREF_KEY, mAutoRefreshCheck.isChecked()).apply();
         SHARED_PREFS.edit().putFloat(REFRESH_FREQUENCY_KEY, Float.parseFloat(mRefreshFreqField.getText().toString())).apply();
 
         ReturnToMainActivity();

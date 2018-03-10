@@ -13,6 +13,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.SurfaceHolder;
@@ -26,30 +27,25 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.android.volley.NetworkResponse;
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
-import com.android.volley.toolbox.Volley;
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
 import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.barcode.BarcodeDetector;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ScanActivity extends AppCompatActivity {
     private static int NEXT_LEGI_DELAY = 1000;   //delay between the response from the server and scanning the next legi (in ms)
 
     private boolean mIsCheckingIn = true;   //sets whether we a checking people in or out, will be sent to the server
-    private boolean mAllowNextBarcode = true;
-    private boolean mCanClearResponse = true;
+    private boolean mAllowNextBarcode = true;   //whether a new barcode can be detected
+    private boolean mCanClearResponse = true;   //Whether the user can tap to dismiss the response (in turn allow for a new barcode to be scanned)
 
     //----Server Communication-----
-    private boolean mWaitingOnServer_LegiSubmit = false;
+    private boolean mWaitingOnServer_LegiSubmit = false;    //whether we are waiting for a response from the server, regarding a legi/nethz/email submission to /mutate
     private Handler handler = new Handler();    //Used for delaying function calls, in conjunction with runnables
     private Runnable refreshMemberDB = new Runnable() {    //Refresh stats every x seconds
         @Override
@@ -64,16 +60,14 @@ public class ScanActivity extends AppCompatActivity {
     private Switch mCheckInSwitch;
     private EditText mLegiInputField;
     private TextView mWaitLabel;
-    private TextView mValidLabel;
-    private TextView mInvalidLabel;
-    private TextView mServerErrorLabel;
+    private TextView mResponseLabel;
     private ImageView mTickImage;
     private ImageView mCrossImage;
     private ImageView mBGTint;
 
     //Stats UI
-    private TextView mLeftStatLabel;
-    private TextView mRightStatLabel;
+    private TextView mLeftStatValue;
+    private TextView mRightStatValue;
     private TextView mLeftStatDesc;
     private TextView mRightStatDesc;
 
@@ -81,7 +75,6 @@ public class ScanActivity extends AppCompatActivity {
     private BarcodeDetector mBarcodeDetector;
     private CameraSource mCameraSource;
     private SurfaceView mCameraView;
-    private TextView mBarcodeInfo;
 
 
     @Override
@@ -90,111 +83,8 @@ public class ScanActivity extends AppCompatActivity {
         getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
         setContentView(R.layout.activity_scan);
 
-        //----Initialising UI-----
-        mLegiInputField = findViewById(R.id.LegiInputField);
-        mCheckInSwitch = findViewById(R.id.CheckInSwitch);
-        mCheckInSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mIsCheckingIn = isChecked;
-            }
-        });
-        mWaitLabel = findViewById(R.id.PleaseWaitLabel);
-        mValidLabel = findViewById(R.id.ValidLabel);
-        mInvalidLabel = findViewById(R.id.InvalidLabel);
-        mServerErrorLabel = findViewById(R.id.ServerErrorLabel);
-        mTickImage = findViewById(R.id.TickImage);
-        mCrossImage = findViewById(R.id.CrossImage);
-        mBGTint = findViewById(R.id.BackgroundTint);
-        mBGTint.setAlpha(0.4f);
-
-        mLeftStatLabel = findViewById(R.id.LeftStatLabel);
-        mRightStatLabel = findViewById(R.id.RightStatLabel);
-        mLeftStatDesc = findViewById(R.id.LeftStatDescription);
-        mRightStatDesc = findViewById(R.id.RightStatDescription);
-
-        RelativeLayout mCameraLayout = findViewById(R.id.CameraLayout);
-        mCameraLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mCanClearResponse) {
-                    mAllowNextBarcode = true;
-                    ResetResponseUI();
-                }
-            }
-        });
-
-        //----Setting up Camera and barcode tracking with callbacks------
-        mCameraView = findViewById(R.id.CameraView);
-        mBarcodeInfo = findViewById(R.id.BarcodeOutput);
-
-        mBarcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.CODE_39).build();                 //IMPORTANT: Set the correct format for the barcode reader, can choose all formats but will be slower
-        CameraSource.Builder camBuilder= new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(640, 480);
-        camBuilder.setAutoFocusEnabled(true);
-        //mCameraSource = new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(640, 480).build();
-        mCameraSource = camBuilder.build();
-
-        //initialising the camera view, so we can see the camera and analyse the frames for barcodes
-        mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) {
-                try {
-                    if ( ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA ) != PackageManager.PERMISSION_GRANTED ) {
-                        //IMPLEMENT: ask for camera permission
-                    }
-                    else
-                        mCameraSource.start(mCameraView.getHolder());
-                } catch (IOException ie) {
-                    Log.e("mCameraSource", ie.getMessage());
-                }
-            }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                mCameraSource.stop();
-            }
-        });
-
-        //detecting barcodes
-        mBarcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
-            @Override
-            public void release() {}
-
-            @Override
-            public void receiveDetections(Detector.Detections<Barcode> detections) {    //This is called every frame or so and will give the detected barcodes
-                final SparseArray<Barcode> barcodes = detections.getDetectedItems();
-
-                if (barcodes.size() == 0)
-                    return;
-
-                //Only allow another barcode if: time since the last scan has passed, the barcode is different or the checkmode has changed
-                if(mAllowNextBarcode) {
-                    Log.e("barcodeDetect", "detected barcode: " + barcodes.valueAt(0).displayValue);
-
-                    mAllowNextBarcode = false;  //prevent the same barcode being submitted in the next frame until this is set to true again in the postDelayed call
-                    mCanClearResponse = false;
-
-                    mBarcodeInfo.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
-                        public void run() {
-                            SubmitLegiNrToServer(barcodes.valueAt(0).displayValue); //submit the legi value to the server on the main thread
-
-                            mBarcodeInfo.setText(barcodes.valueAt(0).displayValue);
-
-                            handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
-
-                                @Override
-                                public void run() {
-                                    mCanClearResponse = true;
-                                }
-                            }, NEXT_LEGI_DELAY);
-                        }
-                    });
-                }
-            }
-        });
-
+        InitialiseUI();
+        InitialiseBarcodeDetection();
         ResetResponseUI();
         //Note the refreshMemberDB handler function is called in OnResume, as this is called after onCreate
     }
@@ -210,6 +100,127 @@ public class ScanActivity extends AppCompatActivity {
         super.onResume();
         handler.postDelayed(refreshMemberDB, 0);
     }
+
+    /**
+     * Initalises UI so variables are linked to layout, setting up onClick callbacks
+     */
+    private void InitialiseUI()
+    {
+        //Assigning from layout
+        mLegiInputField = findViewById(R.id.LegiInputField);
+        mCheckInSwitch = findViewById(R.id.CheckInSwitch);
+        mWaitLabel = findViewById(R.id.PleaseWaitLabel);
+        mResponseLabel = findViewById(R.id.ResponseLabel);
+        mTickImage = findViewById(R.id.TickImage);
+        mCrossImage = findViewById(R.id.CrossImage);
+        mBGTint = findViewById(R.id.BackgroundTint);
+        mBGTint.setAlpha(0.4f);
+
+        mLeftStatValue = findViewById(R.id.LeftStatLabel);
+        mRightStatValue = findViewById(R.id.RightStatLabel);
+        mLeftStatDesc = findViewById(R.id.LeftStatDescription);
+        mRightStatDesc = findViewById(R.id.RightStatDescription);
+
+        mCameraView = findViewById(R.id.CameraView);
+
+        //creating onClick callbacks
+        mCheckInSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                mIsCheckingIn = isChecked;
+            }
+        });
+
+        RelativeLayout mCameraLayout = findViewById(R.id.CameraLayout);
+        mCameraLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mCanClearResponse) {
+                    mAllowNextBarcode = true;
+                    ResetResponseUI();
+                }
+            }
+        });
+    }
+
+    /**
+     * Creates a barcode scanner and sets up repeating call to scan for barcodes, also creates cameraPreview for layout. Need to initUI before.
+     */
+    private void InitialiseBarcodeDetection()
+    {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int width = displayMetrics.widthPixels;
+        if(width <= 64)
+            width = 720;
+        int height = displayMetrics.heightPixels;
+        if(height <= 64)
+            height = 1280;
+        mBarcodeDetector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.CODE_39).build();                 //IMPORTANT: Set the correct format for the barcode reader, can choose all formats but will be slower
+        CameraSource.Builder camBuilder = new CameraSource.Builder(this, mBarcodeDetector).setRequestedPreviewSize(width, height - 64);
+        camBuilder.setAutoFocusEnabled(true);
+        mCameraSource = camBuilder.build();
+
+        //initialising the camera view, so we can see the camera and analyse the frames for barcodes
+        mCameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+                try {
+                    if ( ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA ) != PackageManager.PERMISSION_GRANTED ) {
+                        //IMPLEMENT: ask for camera permission
+                    }
+                    else
+                        mCameraSource.start(mCameraView.getHolder());   //Note: may need to pause camera during onPause
+                } catch (IOException e) {
+                    Log.e("mCameraSource", e.getMessage());
+                }
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+                mCameraSource.stop();
+            }
+        });
+
+        //Detecting Barcodes
+        mBarcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
+            @Override
+            public void release() {}
+
+            @Override
+            public void receiveDetections(Detector.Detections<Barcode> detections) {    //This is called every frame or so and will give the detected barcodes
+                final SparseArray<Barcode> barcodes = detections.getDetectedItems();
+
+                if (barcodes.size() == 0)
+                    return;
+
+                //Only allow another barcode if: time since the last scan has passed, the barcode is different or the checkmode has changed
+                if(mAllowNextBarcode) {
+                    //Log.d("barcodeDetect", "detected barcode: " + barcodes.valueAt(0).displayValue);
+
+                    mAllowNextBarcode = false;  //prevent the same barcode being submitted in the next frame until this is set to true again in the postDelayed call
+                    mCanClearResponse = false;
+
+                    mLegiInputField.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                        public void run() {
+                            SubmitLegiNrToServer(barcodes.valueAt(0).displayValue); //submit the legi value to the server on the main thread
+
+                            handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
+                                @Override
+                                public void run() {
+                                    mCanClearResponse = true;
+                                }
+                            }, NEXT_LEGI_DELAY);
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    //=====END OF INITIALISATION=====
 
     /**
      * Call this to submit a legi nr from a UI Element
@@ -231,114 +242,132 @@ public class ScanActivity extends AppCompatActivity {
     }
 
     /**
-     * Will submit a legi nr to the server and will set the UI accondingly, POST Request is done with Volley.
+     * Will submit a legi nr/nethz/email to the server and will set the UI accondingly, POST Request is done with Volley.
      */
     public void SubmitLegiNrToServer(String leginr)
     {
         if(mWaitingOnServer_LegiSubmit)
             return;
 
-        MainActivity.vibrator.vibrate(50);
+        if(MainActivity.vibrator == null)
+            MainActivity.vibrator.vibrate(50);
 
         if(!ServerRequests.CheckConnection(getApplicationContext())) {
-            SetUIFromResponse(0, "");
+            SetUIFromResponse_Invalid(0, getResources().getString(R.string.no_internet));
             return;
         }
 
-        final String formattedLeginr;
-        if(leginr.charAt(0) == 'S')         //Remove prefix S from barcode if needed
-            formattedLeginr = leginr.substring(1);
-        else
-            formattedLeginr = leginr;
-
         SetWaitingOnServer(true);       //Clear UI
-        mValidLabel.setVisibility(View.INVISIBLE);
-        mInvalidLabel.setVisibility(View.INVISIBLE);
-        mServerErrorLabel.setVisibility(View.INVISIBLE);
+        mResponseLabel.setVisibility(View.INVISIBLE);
 
-        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", info=" + formattedLeginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out") + ", URL used: " + SettingsActivity.GetServerURL(getApplicationContext()));
-
-        //----POST Request----
-        //Creates a post request which can then later be added to the queue, includes all the callback functionality as well. Use the \mutate, matches with server scripts
-        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(getApplicationContext()) + "/mutate"
-                , new Response.Listener<String>() { @Override public void onResponse(String response) {}}       //initalise with empty response listeners as we will handle the response in the parseNetworkResponse and parseNetworkError functions
-                , new Response.ErrorListener() {@Override public void onErrorResponse(VolleyError error) {}})
-        {
+        ServerRequests.OnJsonReceivedCallback callback = new ServerRequests.OnJsonReceivedCallback() {
             @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) { //Note: the parseNetworkResponse is only called if the response was successful (codes 2xx), else parseNetworkError is called.
-                final NetworkResponse nr = response;
-                mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+            public void OnJsonReceived(final int statusCode, final JSONObject data) {
+                mResponseLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
                     public void run() {
-                        SetUIFromResponse(nr.statusCode, new String(nr.data));  //will adjust UI elems to display response
-                    }
-                });
-
-                return super.parseNetworkResponse(response);
-            }
-
-            @Override
-            protected VolleyError parseNetworkError(VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                if(volleyError != null && volleyError.networkResponse != null) {
-                    final VolleyError ve = volleyError;
-                    mValidLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
-                        public void run() {
-                            SetUIFromResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
+                        String msg = "No Message Found";
+                        Log.e("json", "mutate json received: " + data.toString());
+                        try {
+                            msg = data.getString("message");
+                            Member m = new Member(data.getJSONObject("signup"));
+                            SetUIFromResponse_Valid(statusCode, msg, m);
                         }
-                    });
-                }
+                        catch (JSONException e){
+                            Log.e("json", "Couldnt parse mutate json");
+                        }
+                }});
 
-                return super.parseNetworkError(volleyError);
             }
 
             @Override
-            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!`
-
-                Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
-                params.put("pin", MainActivity.CurrentPin);
-                params.put("info", formattedLeginr);
-                params.put("checkmode", (mIsCheckingIn ? "in" : "out"));
-
-                return params;
+            public void OnStringReceived(final int statusCode, final String data) {
+                mResponseLabel.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
+                    public void run() {
+                        SetUIFromResponse_Invalid(statusCode, data);
+                    }});
             }
         };
-        //----end of defining post request----
 
-        if(ServerRequests.requestQueue == null)
-            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
-        ServerRequests.requestQueue.add(postRequest);
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", info=" + leginr + ", checkmode=" + (mIsCheckingIn ? "in" : "out") + ", URL used: " + SettingsActivity.GetServerURL(getApplicationContext()));
+        ServerRequests.CheckLegi(this, callback, leginr, mIsCheckingIn);
     }
 
     /**
      * Will set UI elements correctly based on the response from the server on a legi submission.
      * @param statusCode http status code from the response, eg 200 or 400
-     * @param responseText the text received from the server about our post request
+     * @param member the text received from the server about our post request
      */
-    private void SetUIFromResponse(int statusCode, String responseText)
+    private void SetUIFromResponse_Valid(int statusCode, String message, Member member)
     {
         SetWaitingOnServer(false);
-        Log.e("postrequest", "Response from server for legi submission: " + statusCode + " with text: " + responseText + " on event pin: " + MainActivity.CurrentPin);
+        if(message.isEmpty())
+            return;
 
         if(statusCode == 200) { //success
-            mValidLabel.setVisibility(View.VISIBLE);
-            mValidLabel.setText(responseText);
+            mResponseLabel.setVisibility(View.VISIBLE);
+            mResponseLabel.setText(message);
             mTickImage.setVisibility(View.VISIBLE);
+            mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
             mBGTint.setVisibility(View.VISIBLE);
-            mBGTint.setColorFilter(getResources().getColor(R.color.colorValid));
+
+            if(member.membership.equalsIgnoreCase("regular"))
+            {
+                mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
+                mBGTint.setColorFilter(getResources().getColor(R.color.colorValid));
+            }
+            else
+            {
+                mTickImage.setColorFilter(getResources().getColor(R.color.colorOrange));
+                mBGTint.setColorFilter(getResources().getColor(R.color.colorOrange));
+            }
+
+            MainActivity.vibrator.vibrate(100);
+        }
+        else
+        {
+            SetUIFromResponse_Invalid(statusCode, message);
+        }
+
+        RefreshMemberDB();
+    }
+
+    public void SetUIFromResponse_Invalid(int statusCode, String responseText)
+    {
+        SetWaitingOnServer(false);
+
+        if(statusCode == 200) { //success
+            mResponseLabel.setVisibility(View.VISIBLE);
+            mResponseLabel.setText(responseText);
+            mTickImage.setVisibility(View.VISIBLE);
+            mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
+            mBGTint.setVisibility(View.VISIBLE);
+
+
+            if(responseText.substring(0, 12).equalsIgnoreCase("regular"))
+            {
+                mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
+                mBGTint.setColorFilter(getResources().getColor(R.color.colorValid));
+            }
+            else
+            {
+                mTickImage.setColorFilter(getResources().getColor(R.color.colorOrange));
+                mBGTint.setColorFilter(getResources().getColor(R.color.colorOrange));
+            }
 
             MainActivity.vibrator.vibrate(100);
         }
         else if (statusCode == 0)   //no internet
         {
-            mInvalidLabel.setVisibility(View.VISIBLE);
-            mInvalidLabel.setText(R.string.no_internet);
+            mResponseLabel.setVisibility(View.VISIBLE);
+            mResponseLabel.setText(R.string.no_internet);
             mCrossImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
         }
         else
         {                  //invalid legi/already checked in etc
-            mInvalidLabel.setVisibility(View.VISIBLE);
-            mInvalidLabel.setText(responseText);
+            mResponseLabel.setVisibility(View.VISIBLE);
+            mResponseLabel.setText(responseText);
             mCrossImage.setVisibility(View.VISIBLE);
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
@@ -349,12 +378,13 @@ public class ScanActivity extends AppCompatActivity {
         RefreshMemberDB();
     }
 
+    /**
+     * Will clear the response UI and hide it
+     */
     private void ResetResponseUI ()
     {
-        mBarcodeInfo.setText(R.string.no_barcode_detected); //Reset UI
-        mValidLabel.setVisibility(View.INVISIBLE);
-        mInvalidLabel.setVisibility(View.INVISIBLE);
-        mServerErrorLabel.setVisibility(View.INVISIBLE);
+        mResponseLabel.setText("");
+        mResponseLabel.setVisibility(View.INVISIBLE);
         mTickImage.setVisibility(View.INVISIBLE);
         mCrossImage.setVisibility(View.INVISIBLE);
         mBGTint.setVisibility(View.INVISIBLE);
@@ -403,24 +433,24 @@ public class ScanActivity extends AppCompatActivity {
 
         if(EventDatabase.instance.eventData.eventType == EventData.EventType.Event)
         {
-            mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
-            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatLabel.setVisibility(View.VISIBLE);
-            mRightStatLabel.setText("" + (EventDatabase.instance.totalSignups - EventDatabase.instance.currentAttendance));
-            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
-            mRightStatLabel.setVisibility(View.VISIBLE);
+            mLeftStatValue.setText("" + EventDatabase.instance.currentAttendance);
+            mLeftStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mLeftStatValue.setVisibility(View.VISIBLE);
+            mRightStatValue.setText("" + (EventDatabase.instance.totalSignups - EventDatabase.instance.currentAttendance));
+            mRightStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
+            mRightStatValue.setVisibility(View.VISIBLE);
 
             mLeftStatDesc.setText("Current");
             mRightStatDesc.setText("Remaining");
         }
         else if(EventDatabase.instance.eventData.eventType == EventData.EventType.GV)
         {
-            mLeftStatLabel.setText("" + EventDatabase.instance.currentAttendance);
-            mLeftStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatLabel.setVisibility(View.VISIBLE);
-            mRightStatLabel.setText("" + EventDatabase.instance.regularMembers);
-            mRightStatLabel.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mRightStatLabel.setVisibility(View.VISIBLE);
+            mLeftStatValue.setText("" + EventDatabase.instance.currentAttendance);
+            mLeftStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mLeftStatValue.setVisibility(View.VISIBLE);
+            mRightStatValue.setText("" + EventDatabase.instance.regularMembers);
+            mRightStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+            mRightStatValue.setVisibility(View.VISIBLE);
 
             mLeftStatDesc.setText("Current");
             mRightStatDesc.setText("Regular");

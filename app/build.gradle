@@ -29,7 +29,7 @@ android {
         applicationId "ch.amiv.checkin"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 9
+        versionCode 10
         versionName "1.1"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

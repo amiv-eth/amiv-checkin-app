@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText mPinField;
     private TextView mInvalidPinLabel;
+
     public static Vibrator vibrator;
 
     @Override
@@ -40,6 +41,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        InitialiseUI();
+        CheckPermissions();
+    }
+
+    @Override
+    public void onPause()
+    {
+        super.onPause();
+        if(vibrator != null)
+            vibrator.cancel();
+    }
+
+    private void InitialiseUI()
+    {
         mPinField = findViewById(R.id.PinField);
         mInvalidPinLabel = findViewById(R.id.InvalidPinLabel);
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
@@ -53,24 +68,18 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
 
+    private void CheckPermissions()
+    {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) { //Get permission for camera
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CAMERA)) {
                 //Add popup
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
             }
             else
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 0);
         }
-    }
-
-    @Override
-    public void onResume() {        //When we return to the main activity
-        super.onResume();
-
-        mWaitingOnServer = false;
-        mPinField.setText("");  //clear pin field
-        mInvalidPinLabel.setVisibility(View.INVISIBLE);
-        EventDatabase.instance = null;
     }
 
     /**
@@ -79,82 +88,51 @@ public class MainActivity extends AppCompatActivity {
      */
     public void SubmitPin(View view)
     {
-        vibrator.vibrate(50);
+        if(vibrator != null)
+            vibrator.vibrate(50);
 
-        if(!ServerRequests.CheckConnection(getApplicationContext())) {
-            ApplyServerResponse(0, "");
-            return;
-        }
-
-        if(mWaitingOnServer || "".equals(mPinField.getText().toString()))  //prevents submitting a second pin while still waiting on the response for the first pin
+        if(mWaitingOnServer || mPinField.getText().toString().isEmpty())  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
         mWaitingOnServer = true;
 
+        if(!ServerRequests.CheckConnection(getApplicationContext())) {
+            ApplyServerResponse(true, 0, getResources().getString(R.string.no_internet));
+            return;
+        }
 
         CurrentPin = mPinField.getText().toString();
 
-        Log.e("pin", "event pin submitted to server: " + CurrentPin);
-
-        //----POST Request----
-        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(getApplicationContext()) + "/checkpin"
-                , new Response.Listener<String>() { @Override public void onResponse(String response){} }
-                , new Response.ErrorListener() { @Override public void onErrorResponse(VolleyError error){} })
-        {
+        //Create a callback, this is what happens when we get the response
+        ServerRequests.OnCheckPinReceivedCallback callback = new ServerRequests.OnCheckPinReceivedCallback() {
             @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) { //Note: the parseNetworkResponse is only called if the response was successful (codes 2xx), else parseNetworkError is called.
-                final NetworkResponse nr = response;
+            public void OnStringReceived(final boolean validResponse, final int statusCode, final String data) {
                 mPinField.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
-                public void run() {
-                    ApplyServerResponse(nr.statusCode, new String(nr.data));  //will adjust UI elems to display response
+                    public void run() {
+                        ApplyServerResponse(validResponse, statusCode, data);
                 }});
-
-                return super.parseNetworkResponse(response);
-            }
-
-            @Override
-            protected VolleyError parseNetworkError(final VolleyError volleyError) {  //see comments at parseNetworkResponse()
-                if(volleyError != null && volleyError.networkResponse != null) {
-                    final VolleyError ve = volleyError;
-                    mPinField.post(new Runnable() {
-                        public void run() {
-                            if (ve != null && ve.networkResponse != null)
-                                ApplyServerResponse(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
-                            else
-                                InvalidUrlResponse();
-                        }
-                    });
-                }
-
-                return super.parseNetworkError(volleyError);
-            }
-
-            @Override
-            protected Map<String, String> getParams() {
-                Log.e("postrequest", "Sent event pin to server with params: pin=" + MainActivity.CurrentPin);
-
-                Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
-                params.put("pin", MainActivity.CurrentPin);
-
-                return params;
             }
         };
 
-        if(ServerRequests.requestQueue == null)
-            ServerRequests.requestQueue = Volley.newRequestQueue(getApplicationContext());  //Adds the defined post request to the queue to be sent to the server
-        ServerRequests.requestQueue.add(postRequest);
-
+        ServerRequests.CheckPin(this, callback);
 
         //StartScanActivity();    //NOTE: Uncomment for debugging without valid pin
     }
 
     /**
-     * Submit a server response to the function, will apply UI feedback or start the main activity
+     * Submit a server response to the function, will apply UI feedback or start the scan activity
      * @param statusCode http status code from the response, eg 200 or 400
      * @param responseText the text received from the server about our post request
      */
-    private void ApplyServerResponse(int statusCode, String responseText)
+    private void ApplyServerResponse(boolean validResponse, int statusCode, String responseText)
     {
+        if(!mWaitingOnServer)   //Dont display response if we are not expecting one
+            return;
         mWaitingOnServer = false;
+
+        if(!validResponse) {
+            InvalidUrlResponse();
+            return;
+        }
 
         Log.e("postrequest", "Response from server for pin submission: " + statusCode + " with text: " + responseText + " on event pin: " + MainActivity.CurrentPin);
 
@@ -174,7 +152,7 @@ public class MainActivity extends AppCompatActivity {
         }
         else                    //Other error
         {
-            InvalidUrlResponse();
+            InvalidUrlResponse();       //Should interpret other errors as well instead of just displaying invalid url, which may not be the case
         }
     }
 
@@ -184,22 +162,17 @@ public class MainActivity extends AppCompatActivity {
         mInvalidPinLabel.setText(R.string.invalid_url);
     }
 
-    //Changes to the scanning screen
+    //=====Changing Activity====
     private void StartScanActivity()
     {
+        mWaitingOnServer = false;
+        mPinField.setText("");  //clear pin field
+        mInvalidPinLabel.setVisibility(View.INVISIBLE);
         EventDatabase.instance = null;
-        /*ServerRequests.UpdateEventData(this, new ServerRequests.OnDataReceivedCallback() {
-            @Override
-            public void OnDataReceived() {
-                if(!EventDatabase.instance.eventData.name.equals("") && getActionBar() != null)
-                    getActionBar().setTitle(EventDatabase.instance.eventData.name);
-            }
-        });*/
 
         Intent intent = new Intent(this, ScanActivity.class);
         startActivity(intent);
     }
-
 
     public void StartSettingsActivity(View view)
     {

@@ -25,6 +25,8 @@ public class EventDatabase {
     public int totalSignups;        //For Events
     public int currentAttendance;   //GV and Events
     public int regularMembers;      //For GV
+    public int absoluteMajority;
+    public int twoThirdsMajority;
     public int extraordinaryMembers;
     public int honoraryMembers;
     public int totalMembers;
@@ -55,7 +57,6 @@ public class EventDatabase {
     public void UpdateStats(JSONArray statSource, boolean hasEventInfos)
     {
         stats.clear();
-
         try {
             for (int i = 0; i < statSource.length(); i++) {
                 JSONObject j = statSource.getJSONObject(i);
@@ -69,6 +70,12 @@ public class EventDatabase {
                         break;
                     case "Current Attendance":
                         EventDatabase.instance.currentAttendance = j.getInt("value");
+                        break;
+                    case "Current Absolute Majority":
+                        EventDatabase.instance.absoluteMajority = j.getInt("value");
+                        break;
+                    case "Current 2/3 Majority":
+                        EventDatabase.instance.twoThirdsMajority = j.getInt("value");
                         break;
                     case "Regular Members":         //GV type
                         EventDatabase.instance.regularMembers = j.getInt("value");

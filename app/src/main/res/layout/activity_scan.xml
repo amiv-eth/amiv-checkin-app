@@ -2,6 +2,7 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="ch.amiv.checkin.ScanActivity"
@@ -41,18 +42,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:srcCompat="@android:color/white" />
-
-        <TextView
-            android:id="@+id/BarcodeOutput"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
-            android:layout_marginBottom="69dp"
-            android:text="@string/no_barcode_detected"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:visibility="invisible" />
 
     </RelativeLayout>
 
@@ -159,51 +148,15 @@
         app:layout_constraintTop_toBottomOf="@+id/CheckInLabel" />
 
     <TextView
-        android:id="@+id/ValidLabel"
+        android:id="@+id/ResponseLabel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
         android:maxLines="100"
         android:scrollHorizontally="false"
         android:text="Valid"
-        android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textSize="32sp"
-        android:visibility="invisible"
-        app:layout_constraintEnd_toStartOf="@+id/RightStatLabel"
-        app:layout_constraintStart_toEndOf="@+id/LeftStatLabel"
-        app:layout_constraintTop_toBottomOf="@+id/SubmitLegiNrButton" />
-
-    <TextView
-        android:id="@+id/ServerErrorLabel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp"
-        android:maxLines="100"
-        android:scrollHorizontally="false"
-        android:text="Server Error"
-        android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textSize="32sp"
-        android:visibility="invisible"
-        app:layout_constraintEnd_toStartOf="@+id/RightStatLabel"
-        app:layout_constraintStart_toEndOf="@+id/LeftStatLabel"
-        app:layout_constraintTop_toBottomOf="@+id/SubmitLegiNrButton" />
-
-    <TextView
-        android:id="@+id/InvalidLabel"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="11dp"
-        android:maxLines="100"
-        android:scrollHorizontally="false"
-        android:text="Invalid"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="28sp"
@@ -232,15 +185,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
         android:text="0"
         android:textAlignment="viewStart"
         android:textColor="@android:color/holo_green_dark"
         android:textSize="28sp"
         android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/TickImage" />
+        app:layout_constraintTop_toBottomOf="@+id/LeftStatDescription" />
 
     <TextView
         android:id="@+id/RightStatLabel"
@@ -248,15 +200,14 @@
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
-        android:layout_marginEnd="20dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
         android:text="0"
         android:textAlignment="viewEnd"
         android:textColor="@android:color/holo_red_dark"
         android:textSize="28sp"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/TickImage" />
+        app:layout_constraintTop_toBottomOf="@+id/RightStatDescription" />
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/ShowMemberList"
@@ -286,19 +237,19 @@
         android:textSize="16sp"
         android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/LeftStatLabel" />
+        app:layout_constraintTop_toBottomOf="@+id/LegiInputField" />
 
     <TextView
         android:id="@+id/RightStatDescription"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
         android:textAlignment="textEnd"
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/RightStatLabel" />
+        app:layout_constraintTop_toBottomOf="@+id/LegiInputField" />
 
 </android.support.constraint.ConstraintLayout>

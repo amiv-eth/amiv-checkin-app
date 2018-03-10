@@ -6,11 +6,13 @@ import android.net.NetworkInfo;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -33,6 +35,115 @@ public final class ServerRequests {
         void OnDataReceived();
     }
 
+    public interface OnCheckPinReceivedCallback {  //used for doing callbacks when the memberDB has been updated
+        void OnStringReceived(boolean validResponse, int statusCode, String data);
+    }
+
+    public interface OnJsonReceivedCallback {  //used for doing callbacks when the memberDB has been updated
+        void OnJsonReceived(int statusCode, JSONObject data);
+        void OnStringReceived (int statusCode, String data);
+    }
+
+    /**
+     * Call this to check with the server if a pin is valid
+     * @return whether there is internet or not
+     * @param callback A function to execute when the response has been received
+     */
+    public static void CheckPin (final Context context, final OnCheckPinReceivedCallback callback)
+    {
+
+        if(!CheckConnection(context))
+            return;
+
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + "/checkpin");
+
+        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + "/checkpin"
+                , new Response.Listener<String>() { @Override public void onResponse(String response){} }
+                , new Response.ErrorListener() { @Override public void onErrorResponse(VolleyError error){} })
+        {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) { //Note: the parseNetworkResponse is only called if the response was successful (codes 2xx), else parseNetworkError is called.
+                if(response != null)
+                    callback.OnStringReceived(true, response.statusCode, new String(response.data));
+                else
+                    callback.OnStringReceived(false, 400, "");
+                return super.parseNetworkResponse(response);
+            }
+
+            @Override
+            protected VolleyError parseNetworkError(final VolleyError volleyError) {  //see comments at parseNetworkResponse()
+                if(volleyError != null && volleyError.networkResponse != null)
+                    callback.OnStringReceived(true, volleyError.networkResponse.statusCode, new String(volleyError.networkResponse.data));
+                else
+                    callback.OnStringReceived(false, 400, "");
+
+                return super.parseNetworkError(volleyError);
+            }
+
+            @Override
+            protected Map<String, String> getParams() {
+                Map<String, String> params = new HashMap<String, String>(); //Set the parameters being sent
+                params.put("pin", MainActivity.CurrentPin);
+
+                return params;
+            }
+        };
+
+        if(requestQueue == null)
+            requestQueue = Volley.newRequestQueue(context);  //Adds the defined post request to the queue to be sent to the server
+        requestQueue.add(postRequest);
+
+    }
+
+    public static void CheckLegi(final Context context, final OnJsonReceivedCallback callback, final String legi, final boolean isCheckingIn)
+    {
+        //Note: server will send a Json if the response is valid, ie the person has been checked in, else a string. This is to get the member type. Yet we still need to do a stringRequest
+        StringRequest req = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + "/mutate"
+                , new Response.Listener<String>() { @Override public void onResponse(String response) {}}       //initalise with empty response listeners as we will handle the response in the parseNetworkResponse and parseNetworkError functions
+                , new Response.ErrorListener() {@Override public void onErrorResponse(VolleyError error) {}})
+        {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) { //Note: the parseNetworkResponse is only called if the response was successful (codes 2xx), else parseNetworkError is called.
+                if(callback != null && response != null && !response.toString().isEmpty()) {
+                    Log.e("json", "mutate json received: " + new String(response.data));
+                    try {
+                        callback.OnJsonReceived(response.statusCode, new JSONObject(new String(response.data)));
+                    }
+                    catch (JSONException e) {
+                        Log.e("json", "Error creating Json from string: " + e.toString());
+                    }
+                }
+
+                return super.parseNetworkResponse(response);
+            }
+
+            @Override
+            protected VolleyError parseNetworkError(VolleyError ve) {  //see comments at parseNetworkResponse()
+                if(ve != null && ve.networkResponse != null) {
+                    Log.e("postrequest", "parseNetworkError Response from server for JSON data: " + ve.networkResponse.statusCode + " with text: " + new String(ve.networkResponse.data) + " on event pin: " + MainActivity.CurrentPin);
+                    callback.OnStringReceived(ve.networkResponse.statusCode, new String(ve.networkResponse.data));
+                }
+
+                return super.parseNetworkError(ve);
+            }
+
+            @Override
+            protected Map<String, String> getParams() { //Adding the parameters to be sent to the server, with forms. Do not change strings as they match with the server scripts!`
+
+                Map<String, String> params = new HashMap<String, String>(); //Parameters being sent to server in POST
+                params.put("pin", MainActivity.CurrentPin);
+                params.put("info", legi);
+                params.put("checkmode", (isCheckingIn ? "in" : "out"));
+
+                return params;
+            }
+        };
+
+        if(requestQueue == null)
+            requestQueue = Volley.newRequestQueue(context);  //Adds the defined post request to the queue to be sent to the server
+        requestQueue.add(req);
+    }
+
     //-----Updating Stats-----
     /**
      * Will Get the list of people for the event from the server, with stats, and save to the static memberDatabase.
@@ -48,8 +159,6 @@ public final class ServerRequests {
                 (JSONObject) null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                Log.e("postrequest", "MemberDb JSON file response received.");
-
                 // Parsing json object response and save to the static memberDB
                 try {
                     if(EventDatabase.instance == null) {
@@ -67,7 +176,7 @@ public final class ServerRequests {
                     boolean hasEventInfos = response.has("eventinfos");   //If the json does not have the eventinfos or we cannot parse the event type then imply the event type from the stats
                     if(hasEventInfos) {
                         JSONObject eventInfo = response.getJSONObject("eventinfos");
-                        Log.e("postrequest", "event infos content:" + eventInfo.toString());
+                        //Log.e("postrequest", "event infos content:" + eventInfo.toString());
 
                         hasEventInfos = EventDatabase.instance.eventData.Update(eventInfo.getInt("_id"), eventInfo.getString("event_type"), eventInfo.getString("title"),
                                 eventInfo.getString("description"), eventInfo.getInt("signup_count"), eventInfo.getInt("spots"), eventInfo.getString("time_start"));
@@ -159,13 +268,12 @@ public final class ServerRequests {
     /**
      * @return returns true if there is an active internet connection, test this before requesting something from the server
      */
-
     public static boolean CheckConnection(Context context)
     {
         ConnectivityManager cm = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
 
-        if((activeNetwork == null || !activeNetwork.isConnectedOrConnecting()))
+        if(activeNetwork == null || !activeNetwork.isConnectedOrConnecting())
         {
             Log.e("postrequest", "No active internet connection");
             return false;
