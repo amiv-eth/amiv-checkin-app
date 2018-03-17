@@ -29,6 +29,9 @@ import java.util.Map;
  */
 
 public final class ServerRequests {
+    private static String ON_SUBMIT_PIN_URL_EXT = "/checkpin";
+    private static String ON_SUBMIT_LEGI_URL_EXT = "/mutate";
+    private static String GET_DATA_URL_EXT = "/checkin_update_data";
     public static RequestQueue requestQueue;
 
     public interface OnDataReceivedCallback {  //used for doing callbacks when the memberDB has been updated
@@ -55,9 +58,9 @@ public final class ServerRequests {
         if(!CheckConnection(context))
             return;
 
-        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + "/checkpin");
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + ON_SUBMIT_PIN_URL_EXT);
 
-        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + "/checkpin"
+        StringRequest postRequest = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + ON_SUBMIT_PIN_URL_EXT
                 , new Response.Listener<String>() { @Override public void onResponse(String response){} }
                 , new Response.ErrorListener() { @Override public void onErrorResponse(VolleyError error){} })
         {
@@ -98,7 +101,7 @@ public final class ServerRequests {
     public static void CheckLegi(final Context context, final OnJsonReceivedCallback callback, final String legi, final boolean isCheckingIn)
     {
         //Note: server will send a Json if the response is valid, ie the person has been checked in, else a string. This is to get the member type. Yet we still need to do a stringRequest
-        StringRequest req = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + "/mutate"
+        StringRequest req = new StringRequest(Request.Method.POST, SettingsActivity.GetServerURL(context) + ON_SUBMIT_LEGI_URL_EXT
                 , new Response.Listener<String>() { @Override public void onResponse(String response) {}}       //initalise with empty response listeners as we will handle the response in the parseNetworkResponse and parseNetworkError functions
                 , new Response.ErrorListener() {@Override public void onErrorResponse(VolleyError error) {}})
         {
@@ -153,9 +156,9 @@ public final class ServerRequests {
         if(!CheckConnection(context))
             return;
 
-        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + "/checkin_update_data");
+        Log.e("postrequest", "Params sent: pin=" + MainActivity.CurrentPin + ", URL used: " + SettingsActivity.GetServerURL(context) + GET_DATA_URL_EXT);
 
-        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(context) + "/checkin_update_data",
+        JsonObjectRequest req = new JsonObjectRequest(Request.Method.GET, SettingsActivity.GetServerURL(context) + GET_DATA_URL_EXT,
                 (JSONObject) null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -166,7 +169,7 @@ public final class ServerRequests {
                         return;
                     }
 
-                    Log.e("postrequest", "response length:" + response.length() + "   keys: " + response.keys().next() + "   content: " + response.toString());
+                    Log.e("postrequest", "response length:" + response.length() + "   keys: " + (response.keys().hasNext() ? response.keys().next() : "no keys found") + "   content: " + response.toString());
 
                     //1. Update List of People
                     if (response.has("signups"))

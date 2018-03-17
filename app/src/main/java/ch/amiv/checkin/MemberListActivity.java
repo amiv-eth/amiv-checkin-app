@@ -53,7 +53,7 @@ public class MemberListActivity extends AppCompatActivity {
     private void InitialiseListView()
     {
         if(EventDatabase.instance.members == null) {
-            EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-"));
+            EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-", "0"));
         }
 
         //=====Recycler View====

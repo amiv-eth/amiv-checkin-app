@@ -9,6 +9,7 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Vibrator;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -178,5 +179,14 @@ public class MainActivity extends AppCompatActivity {
     {
         Intent intent = new Intent(this, SettingsActivity.class);
         startActivity(intent);
+    }
+
+    /**
+     * Will open the checkin website in a browser
+     */
+    public void GoToWebsite(View view)
+    {
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(SettingsActivity.GetServerURL(this)));
+        startActivity(browserIntent);
     }
 }

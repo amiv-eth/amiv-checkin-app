@@ -58,11 +58,15 @@ public class ScanActivity extends AppCompatActivity {
 
     //-----UI Elements----
     private Switch mCheckInSwitch;
+    private TextView mCheckInSwitchLabel_In;
+    private TextView mCheckInSwitchLabel_Out;
+
     private EditText mLegiInputField;
     private TextView mWaitLabel;
     private TextView mResponseLabel;
     private ImageView mTickImage;
     private ImageView mCrossImage;
+    private TextView mCheckinCountLabel;
     private ImageView mBGTint;
 
     //Stats UI
@@ -109,10 +113,13 @@ public class ScanActivity extends AppCompatActivity {
         //Assigning from layout
         mLegiInputField = findViewById(R.id.LegiInputField);
         mCheckInSwitch = findViewById(R.id.CheckInSwitch);
+        mCheckInSwitchLabel_In = findViewById(R.id.CheckInLabel);
+        mCheckInSwitchLabel_Out = findViewById(R.id.CheckOutLabel);
         mWaitLabel = findViewById(R.id.PleaseWaitLabel);
         mResponseLabel = findViewById(R.id.ResponseLabel);
         mTickImage = findViewById(R.id.TickImage);
         mCrossImage = findViewById(R.id.CrossImage);
+        mCheckinCountLabel = findViewById(R.id.CheckInCountLabel);
         mBGTint = findViewById(R.id.BackgroundTint);
         mBGTint.setAlpha(0.4f);
 
@@ -276,7 +283,6 @@ public class ScanActivity extends AppCompatActivity {
                             Log.e("json", "Couldnt parse mutate json");
                         }
                 }});
-
             }
 
             @Override
@@ -309,6 +315,15 @@ public class ScanActivity extends AppCompatActivity {
             mTickImage.setVisibility(View.VISIBLE);
             mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
             mBGTint.setVisibility(View.VISIBLE);
+
+            if(EventDatabase.instance.eventData.eventType == EventData.EventType.Counter) {
+                mCheckinCountLabel.setVisibility(View.VISIBLE);
+                mCheckinCountLabel.setText(member.checkinCount);
+            }
+            else {
+                mCheckinCountLabel.setVisibility(View.INVISIBLE);
+                mCheckinCountLabel.setText("");
+            }
 
             if(member.membership.equalsIgnoreCase("regular"))
             {
@@ -387,6 +402,7 @@ public class ScanActivity extends AppCompatActivity {
         mResponseLabel.setVisibility(View.INVISIBLE);
         mTickImage.setVisibility(View.INVISIBLE);
         mCrossImage.setVisibility(View.INVISIBLE);
+        mCheckinCountLabel.setVisibility(View.INVISIBLE);
         mBGTint.setVisibility(View.INVISIBLE);
     }
 
@@ -411,16 +427,16 @@ public class ScanActivity extends AppCompatActivity {
             EventDatabase.instance = new EventDatabase();
 
         ServerRequests.UpdateMemberDB(getApplicationContext(),
-                new ServerRequests.OnDataReceivedCallback(){
-                    @Override
-                    public void OnDataReceived()
-                    {
-                        UpdateStatsUI();
-                        ActionBar actionBar = getSupportActionBar();
-                        if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
-                            actionBar.setTitle(EventDatabase.instance.eventData.name);
-                    }
-                });
+            new ServerRequests.OnDataReceivedCallback(){
+                @Override
+                public void OnDataReceived()
+                {
+                    UpdateStatsUI();
+                    ActionBar actionBar = getSupportActionBar();
+                    if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
+                        actionBar.setTitle(EventDatabase.instance.eventData.name);
+                }
+            });
     }
 
     /**
@@ -431,30 +447,44 @@ public class ScanActivity extends AppCompatActivity {
         if(EventDatabase.instance == null)
             return;
 
-        if(EventDatabase.instance.eventData.eventType == EventData.EventType.Event)
-        {
-            mLeftStatValue.setText("" + EventDatabase.instance.currentAttendance);
-            mLeftStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatValue.setVisibility(View.VISIBLE);
-            mRightStatValue.setText("" + (EventDatabase.instance.totalSignups - EventDatabase.instance.currentAttendance));
-            mRightStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
-            mRightStatValue.setVisibility(View.VISIBLE);
+        //Showing the two stats accordingly
+        if(EventDatabase.instance.stats != null){
+            boolean showLStat = (EventDatabase.instance.stats.size() >= 2);
+            boolean showRStat = (EventDatabase.instance.stats.size() >= 1);
 
-            mLeftStatDesc.setText("Current");
-            mRightStatDesc.setText("Remaining");
-        }
-        else if(EventDatabase.instance.eventData.eventType == EventData.EventType.GV)
-        {
-            mLeftStatValue.setText("" + EventDatabase.instance.currentAttendance);
-            mLeftStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mLeftStatValue.setVisibility(View.VISIBLE);
-            mRightStatValue.setText("" + EventDatabase.instance.regularMembers);
-            mRightStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
-            mRightStatValue.setVisibility(View.VISIBLE);
+            if(showLStat) {
+                KeyValuePair lStat = EventDatabase.instance.stats.get(0);
+                mLeftStatValue.setText(lStat.value);
+                //mLeftStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorValid));
+                mLeftStatDesc.setText(lStat.name);
+            }
+            mLeftStatValue.setVisibility(showLStat ? View.VISIBLE : View.INVISIBLE);
+            mLeftStatDesc.setVisibility(showLStat ? View.VISIBLE : View.INVISIBLE);
 
-            mLeftStatDesc.setText("Current");
-            mRightStatDesc.setText("Regular");
+            if(showRStat) {
+                KeyValuePair rStat = EventDatabase.instance.stats.get(1);
+                mRightStatValue.setText(rStat.value);
+                //mRightStatValue.setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorInvalid));
+                mRightStatDesc.setText(rStat.name);
+            }
+            mRightStatValue.setVisibility(showRStat ? View.VISIBLE : View.INVISIBLE);
+            mRightStatDesc.setVisibility(showRStat ? View.VISIBLE : View.INVISIBLE);
         }
+
+        //Show hide the checkin toggle depending on the event type
+        if(EventDatabase.instance.eventData.eventType == EventData.EventType.Counter)
+            SetCheckInToggle(false);
+        else
+            SetCheckInToggle(true);
+    }
+
+    private void SetCheckInToggle(boolean isVisible)
+    {
+        mCheckInSwitch.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+        mCheckInSwitchLabel_In.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+        mCheckInSwitchLabel_Out.setVisibility(isVisible ? View.VISIBLE : View.GONE);
+        if(!isVisible && !mCheckInSwitch.isChecked())
+            mCheckInSwitch.setChecked(true);
     }
 
     //===Transition to  Member List Activity===
@@ -463,5 +493,4 @@ public class ScanActivity extends AppCompatActivity {
         Intent intent = new Intent(this, MemberListActivity.class);
         startActivity(intent);
     }
-
 }

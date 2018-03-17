@@ -21,18 +21,6 @@ public class EventDatabase {
     public EventData eventData = new EventData();
     public List<KeyValuePair> stats = new ArrayList<KeyValuePair>();
 
-    //-----Statistics------
-    public int totalSignups;        //For Events
-    public int currentAttendance;   //GV and Events
-    public int regularMembers;      //For GV
-    public int absoluteMajority;
-    public int twoThirdsMajority;
-    public int extraordinaryMembers;
-    public int honoraryMembers;
-    public int totalMembers;
-    public int totalNonMembers;
-    public int maxAttendance;
-
     public EventDatabase()
     {
         if(instance != null)
@@ -63,49 +51,12 @@ public class EventDatabase {
 
                 stats.add(new KeyValuePair(j.getString("key"), j.get("value").toString()));
 
-                switch (j.getString("key")) //Assumes 'odd' format of having an array of Json objects each with only two entries, named "key" and "value", see sample JSON under "app/misc/"
-                {
-                    case "Total Signups":           //Event type
-                        EventDatabase.instance.totalSignups = j.getInt("value");
-                        break;
-                    case "Current Attendance":
-                        EventDatabase.instance.currentAttendance = j.getInt("value");
-                        break;
-                    case "Current Absolute Majority":
-                        EventDatabase.instance.absoluteMajority = j.getInt("value");
-                        break;
-                    case "Current 2/3 Majority":
-                        EventDatabase.instance.twoThirdsMajority = j.getInt("value");
-                        break;
-                    case "Regular Members":         //GV type
-                        EventDatabase.instance.regularMembers = j.getInt("value");
-                        break;
-                    case "Extraordinary Members":
-                        if (hasEventInfos && EventDatabase.instance.eventData.eventType == EventData.EventType.None)  //also imply event type
-                            EventDatabase.instance.eventData.eventType = EventData.EventType.GV;
-                        EventDatabase.instance.extraordinaryMembers = j.getInt("value");
-                        break;
-                    case "Honorary Members":
-                        EventDatabase.instance.honoraryMembers = j.getInt("value");
-                        break;
-                    case "Total Members Present":
-                        EventDatabase.instance.totalMembers = j.getInt("value");
-                        break;
-                    case "Total Non-Members Present":
-                        EventDatabase.instance.totalNonMembers = j.getInt("value");
-                        break;
-                    case "Total Attendance":
-                        EventDatabase.instance.currentAttendance = j.getInt("value");
-                        break;
-                    case "Maximum Attendance":
-                        EventDatabase.instance.maxAttendance = j.getInt("value");
-                        break;
-                    /*default:
-                        Log.e("postrequest", "Unknown/unhandled statistics key found in json during UpdateMemberDB(), key: " + j.get(key).toString() + ", value: " + j.get("value").toString());
-                        break;*/
-                }
+                //also imply event type if it has not been parsed from the json
+                if ((!hasEventInfos || EventDatabase.instance.eventData.eventType == EventData.EventType.NotSet || EventDatabase.instance.eventData.eventType == EventData.EventType.Unknown)
+                        && j.getString("key").equalsIgnoreCase("Extraordinary Members"))
+                    EventDatabase.instance.eventData.eventType = EventData.EventType.GV;
             }
-            if (hasEventInfos && EventDatabase.instance.eventData.eventType == EventData.EventType.None)  //imply event type if we do not have the event infos
+            if (hasEventInfos && EventDatabase.instance.eventData.eventType == EventData.EventType.NotSet)  //imply event type if we do not have the event infos
                 EventDatabase.instance.eventData.eventType = EventData.EventType.Event;
         }
         catch (JSONException e) {

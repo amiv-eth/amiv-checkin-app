@@ -74,12 +74,29 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:tint="@android:color/holo_green_light"
-        android:visibility="invisible"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/tick_75alpha" />
+
+    <TextView
+        android:id="@+id/CheckInCountLabel"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:maxLines="100"
+        android:scrollHorizontally="false"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textSize="128sp"
+        android:textStyle="bold"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/ResponseLabel" />
 
     <Switch
         android:id="@+id/CheckInSwitch"
@@ -88,6 +105,7 @@
         android:layout_marginEnd="19dp"
         android:layout_marginTop="4dp"
         android:checked="true"
+        android:visibility="visible"
         app:layout_constraintEnd_toStartOf="@+id/CheckInLabel"
         app:layout_constraintStart_toEndOf="@+id/CheckOutLabel"
         app:layout_constraintTop_toTopOf="parent" />
@@ -101,6 +119,7 @@
         android:text="@string/check_in"
         android:textColor="@android:color/white"
         android:textSize="18sp"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/CheckInSwitch"
         app:layout_constraintTop_toTopOf="parent" />
@@ -114,8 +133,9 @@
         android:text="@string/check_out"
         android:textColor="@android:color/white"
         android:textSize="18sp"
+        android:visibility="visible"
         app:layout_constraintEnd_toStartOf="@+id/CheckInSwitch"
-        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -188,7 +208,7 @@
         android:layout_marginStart="16dp"
         android:text="0"
         android:textAlignment="viewStart"
-        android:textColor="@android:color/holo_green_dark"
+        android:textColor="@android:color/white"
         android:textSize="28sp"
         android:visibility="invisible"
         app:layout_constraintStart_toStartOf="parent"
@@ -203,7 +223,7 @@
         android:layout_marginEnd="16dp"
         android:text="0"
         android:textAlignment="viewEnd"
-        android:textColor="@android:color/holo_red_dark"
+        android:textColor="@android:color/white"
         android:textSize="28sp"
         android:visibility="invisible"
         app:layout_constraintEnd_toEndOf="parent"
@@ -234,7 +254,7 @@
         android:layout_marginTop="4dp"
         android:textAlignment="textStart"
         android:textColor="@android:color/white"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/LegiInputField" />
@@ -244,10 +264,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="8dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:textAlignment="textEnd"
         android:textColor="@android:color/white"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/LegiInputField" />

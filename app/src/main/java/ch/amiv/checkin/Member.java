@@ -16,6 +16,7 @@ public class Member {
     public String legi;
     public String membership;   //as in membership type: ordinary extraordinary honorary
     public String nethz;
+    public String checkinCount; //how often the person has been checked in
 
     public Member (JSONObject _member)
     {
@@ -27,9 +28,10 @@ public class Member {
         legi        = _member.optString("legi");
         membership  = _member.optString("membership");
         nethz       = _member.optString("nethz");
+        checkinCount= _member.optString("XXX count");
     }
 
-    public Member (String _serverId, boolean _checkedIn, String _email, String _firstname, String _lastname, String _legi, String _membership, String _nethz)
+    public Member (String _serverId, boolean _checkedIn, String _email, String _firstname, String _lastname, String _legi, String _membership, String _nethz, String _checkinCount)
     {
         serverId    = _serverId;
         checkedIn   = _checkedIn;
@@ -39,5 +41,6 @@ public class Member {
         legi        = _legi;
         membership  = _membership;
         nethz       = _nethz;
+        checkinCount= _checkinCount;
     }
 }

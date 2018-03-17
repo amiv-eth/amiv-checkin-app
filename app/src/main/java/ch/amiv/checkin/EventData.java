@@ -12,18 +12,18 @@ import java.util.List;
 
 public class EventData {
     public int serverId = 0;
-    public enum EventType {None, Event, PVK, GV}
-    public EventType eventType = EventType.None;
+    public enum EventType {NotSet, Event, PVK, GV, Counter, Unknown}
+    public EventType eventType = EventType.NotSet;
     public String name = "";
     public String description;
     public int signupCount;
-    public int spots;
+    public int spots;   //number of expected people/preregistered members
     public String startTime = "";
 
     public boolean Update(int _serverId, String _eventType, String _name, String _description, int _signupCount, int _spots, String _startTime)
     {
         serverId = _serverId;
-        name= _name;
+        name = _name;
         description = _description;
         signupCount = _signupCount;
         spots = _spots;
@@ -40,12 +40,14 @@ public class EventData {
             eventType = EventType.PVK;
         else if(s.equalsIgnoreCase("AMIV General Assemblies"))
             eventType = EventType.GV;
+        else if(s.equalsIgnoreCase("XXX COUNTER"))
+            eventType = EventType.Counter;
         else {
-            eventType = EventType.None;
+            eventType = EventType.Unknown;
+            Log.d("SetEventType()", "Parsing event type unsuccessful, will attempt to imply event type else restrict functionality.");
             return false;
         }
 
-        Log.d("asd", "parsing event type successful!");
         return true;
     }
 
