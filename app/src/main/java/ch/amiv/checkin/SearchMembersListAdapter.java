@@ -6,8 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -93,7 +91,14 @@ public class SearchMembersListAdapter extends RecyclerView.Adapter<RecyclerView.
                 MemberHolder memberHolder = (MemberHolder)holder;
                 Member m = memberList.get(holder.getAdapterPosition());
                 memberHolder.nameField.setText(m.firstname + " " + m.lastname);
-                memberHolder.checkinField.setText((m.checkedIn ? "In" : "Out"));
+
+                if(EventDatabase.instance.eventData.checkinType == EventData.CheckinType.Counter)
+                    memberHolder.checkinField.setText(m.checkinCount);
+                else if (EventDatabase.instance.eventData.checkinType == EventData.CheckinType.InOut)
+                    memberHolder.checkinField.setText((m.checkedIn ? "In" : "Out"));
+                else
+                    memberHolder.checkinField.setText("");
+
                 if(m.legi == null)
                     memberHolder.infoField.setText("-");
                 else

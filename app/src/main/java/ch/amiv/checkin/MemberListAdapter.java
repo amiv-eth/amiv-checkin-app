@@ -156,7 +156,14 @@ public class MemberListAdapter extends RecyclerView.Adapter<RecyclerView.ViewHol
                 MemberHolder memberHolder = (MemberHolder)holder;
                 Member m = memberList.get(holder.getAdapterPosition() - statList.size() - 2);
                 memberHolder.nameField.setText(m.firstname + " " + m.lastname);
-                memberHolder.checkinField.setText((m.checkedIn ? "In" : "Out"));
+
+                if(EventDatabase.instance.eventData.checkinType == EventData.CheckinType.Counter)
+                    memberHolder.checkinField.setText(m.checkinCount);
+                else if (EventDatabase.instance.eventData.checkinType == EventData.CheckinType.InOut)
+                    memberHolder.checkinField.setText((m.checkedIn ? "In" : "Out"));
+                else
+                    memberHolder.checkinField.setText("");
+
                 if(m.legi == null)
                     memberHolder.infoField.setText("-");
                 else

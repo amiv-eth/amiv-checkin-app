@@ -432,7 +432,7 @@ public class ScanActivity extends AppCompatActivity {
     private void RefreshMemberDB()
     {
         if(EventDatabase.instance == null)
-            EventDatabase.instance = new EventDatabase();
+            new EventDatabase();
 
         ServerRequests.UpdateMemberDB(getApplicationContext(),
             new ServerRequests.OnDataReceivedCallback(){
@@ -441,7 +441,7 @@ public class ScanActivity extends AppCompatActivity {
                 {
                     UpdateStatsUI();
                     ActionBar actionBar = getSupportActionBar();
-                    if(!EventDatabase.instance.eventData.name.equals("") && actionBar != null)
+                    if(!EventDatabase.instance.eventData.name.isEmpty() && actionBar != null)
                         actionBar.setTitle(EventDatabase.instance.eventData.name);
                 }
             });
@@ -480,10 +480,12 @@ public class ScanActivity extends AppCompatActivity {
         }
 
         //Show hide the checkin toggle depending on the event type
-        if(EventDatabase.instance.eventData.eventType == EventData.EventType.Counter)
-            SetCheckInToggle(false);
-        else
-            SetCheckInToggle(true);
+        if(EventDatabase.instance.eventData != null) {
+            if (EventDatabase.instance.eventData.checkinType == EventData.CheckinType.Counter)
+                SetCheckInToggle(false);
+            else
+                SetCheckInToggle(true);
+        }
     }
 
     private void SetCheckInToggle(boolean isVisible)

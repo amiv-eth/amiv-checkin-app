@@ -28,7 +28,9 @@ public class Member {
         legi        = _member.optString("legi");
         membership  = _member.optString("membership");
         nethz       = _member.optString("nethz");
-        checkinCount= _member.optString("XXX count");
+        checkinCount= _member.optString("count");
+        if(checkinCount.isEmpty())
+            checkinCount = "-";
     }
 
     public Member (String _serverId, boolean _checkedIn, String _email, String _firstname, String _lastname, String _legi, String _membership, String _nethz, String _checkinCount)

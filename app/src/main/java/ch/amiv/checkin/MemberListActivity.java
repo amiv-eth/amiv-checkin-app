@@ -67,15 +67,28 @@ public class MemberListActivity extends AppCompatActivity {
         if (id == R.id.menuSearch) {
             StartSearchActivity();
         }
+        else if(id == R.id.menuSort_Membership) {
+            EventDatabase.instance.SetMemberSortingType(EventDatabase.MemberComparator.Membership);
+            mRecylcerAdaper.notifyDataSetChanged();
+        }
+        else if(id == R.id.menuSort_Status) {
+            EventDatabase.instance.SetMemberSortingType(EventDatabase.MemberComparator.Status);
+            mRecylcerAdaper.notifyDataSetChanged();
+        }
+        else if(id == R.id.menuSort_Name) {
+            EventDatabase.instance.SetMemberSortingType(EventDatabase.MemberComparator.Name);
+            mRecylcerAdaper.notifyDataSetChanged();
+        }
+        else if(id == R.id.menuSort_Legi) {
+            EventDatabase.instance.SetMemberSortingType(EventDatabase.MemberComparator.Legi);
+            mRecylcerAdaper.notifyDataSetChanged();
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
     private void InitialiseListView()
     {
-        if(EventDatabase.instance.members == null) {
-            EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-", "0"));
-        }
-
         //=====Recycler View====
         mRecylerView = findViewById(R.id.recyclerView);
 
