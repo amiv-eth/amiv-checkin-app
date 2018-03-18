@@ -81,21 +81,20 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/tick_75alpha" />
 
-    <!--
     <ImageView
         android:id="@+id/textBGShadow"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:alpha="0.4"
-        android:shadowColor="#62494949"
+        android:shadowColor="#621a1a1a"
         android:shadowDx="5"
         android:shadowRadius="15"
         app:layout_constraintBottom_toBottomOf="@+id/LegiInputField"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@android:color/white" />
-!-->
+        app:srcCompat="@android:color/darker_gray" />
+
     <TextView
         android:id="@+id/CheckInCountLabel"
         android:layout_width="0dp"

@@ -11,16 +11,18 @@ import java.util.List;
  */
 
 public class EventData {
-    public int serverId = 0;
+    public String serverId = "0";
     public enum EventType {NotSet, Event, PVK, GV, Counter, Unknown}
     public EventType eventType = EventType.NotSet;
+    public enum CheckinType {InOut, Counter}
+    public CheckinType checkinType = CheckinType.InOut;
     public String name = "";
     public String description;
     public int signupCount;
     public int spots;   //number of expected people/preregistered members
     public String startTime = "";
 
-    public boolean Update(int _serverId, String _eventType, String _name, String _description, int _signupCount, int _spots, String _startTime)
+    public boolean Update(String _serverId, String _eventType, String _checkinType, String _name, String _description, int _signupCount, int _spots, String _startTime)
     {
         serverId = _serverId;
         name = _name;
@@ -28,6 +30,11 @@ public class EventData {
         signupCount = _signupCount;
         spots = _spots;
         startTime = _startTime;
+
+        if(_checkinType .equalsIgnoreCase("counter"))
+            checkinType = CheckinType.Counter;
+        else if(_checkinType.equalsIgnoreCase("in_out"))
+            checkinType = CheckinType.InOut;
 
         return SetEventType(_eventType);
     }

@@ -6,15 +6,12 @@ import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
-
-import java.util.Comparator;
 
 /**
  * This activity is for displaying the list of signed in members, similar to what is seen in the checkin website in the other amiv checkin project.
@@ -92,10 +89,6 @@ public class MemberListActivity extends AppCompatActivity {
 
     private void InitialiseListView()
     {
-        if(EventDatabase.instance.members == null) {
-            EventDatabase.instance.members.add(new Member("0", false, "0", "First Name", "Last Name", "0", "-", "-", "0"));
-        }
-
         //=====Recycler View====
         mRecylerView = findViewById(R.id.recyclerView);
 

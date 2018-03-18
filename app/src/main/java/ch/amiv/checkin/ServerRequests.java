@@ -149,7 +149,7 @@ public final class ServerRequests {
 
     //-----Updating Stats-----
     /**
-     * Will Get the list of people for the event from the server, with stats, and save to the static memberDatabase.
+     * Will Get the list of people for the event from the server, with stats, and save to the static memberDatabase. Note data may still be null!
      */
     public static void UpdateMemberDB (final Context context, final OnDataReceivedCallback callback)
     {
@@ -162,43 +162,59 @@ public final class ServerRequests {
                 (JSONObject) null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                // Parsing json object response and save to the static memberDB
-                try {
-                    if(EventDatabase.instance == null) {
-                        Log.e("postrequest", "Cancelled parsing json as assumed the scanning session was ended.");
-                        return;
-                    }
+                // Parsing json object response and save to the static memberDB, parse each part in a separate try catch, so we get as much info as possible
+                //1. Update List of People
+                if (EventDatabase.instance == null) {
+                    new EventDatabase();
+                    Log.e("postrequest", "Cancelled parsing json as assumed the scanning session was ended.");
+                    return;
+                }
+                if(response == null) {
+                    Log.e("get_event_info", "Response received is null.");
+                    return;
+                }
 
+                try {
                     Log.e("postrequest", "response length:" + response.length() + "   keys: " + (response.keys().hasNext() ? response.keys().next() : "no keys found") + "   content: " + response.toString());
 
-                    //1. Update List of People
                     if (response.has("signups"))
                         EventDatabase.instance.UpdateMemberData(response.getJSONArray("signups"));
+                    else
+                        Log.e("postrequest", "Unable to update signups: not found in json");
+                } catch (JSONException e) {
+                    Log.e("postrequest", "Error parsing received JsonObject in get Signups: " + e.toString());
+                    e.printStackTrace();
+                }
 
-                    //2. Update Event Infos
-                    boolean hasEventInfos = response.has("eventinfos");   //If the json does not have the eventinfos or we cannot parse the event type then imply the event type from the stats
-                    if(hasEventInfos) {
+                //2. Update Event Infos
+                boolean hasEventInfos = response.has("eventinfos");   //If the json does not have the eventinfos or we cannot parse the event type then imply the event type from the stats
+                if (hasEventInfos) {
+                    try {
                         JSONObject eventInfo = response.getJSONObject("eventinfos");
                         //Log.e("postrequest", "event infos content:" + eventInfo.toString());
 
-                        hasEventInfos = EventDatabase.instance.eventData.Update(eventInfo.getInt("_id"), eventInfo.getString("event_type"), eventInfo.getString("title"),
-                                eventInfo.getString("description"), eventInfo.getInt("signup_count"), eventInfo.getInt("spots"), eventInfo.getString("time_start"));
+                        hasEventInfos = EventDatabase.instance.eventData.Update(eventInfo.getString("_id"), eventInfo.optString("event_type"), eventInfo.optString("checkin_type"), eventInfo.getString("title"),
+                                eventInfo.optString("description"), eventInfo.getInt("signup_count"), eventInfo.getInt("spots"), eventInfo.getString("time_start"));
+                    } catch(JSONException e){
+                        Log.e("postrequest", "Error parsing received JsonObject in get EventInfos: " + e.toString());
+                        e.printStackTrace();
                     }
+                }
 
-                    //3. Update Stats
-                    if(response.has("statistics")) {
+                //3. Update Stats
+                if (response.has("statistics")) {
+                    try {
                         JSONArray stats = response.getJSONArray("statistics");
 
                         EventDatabase.instance.UpdateStats(stats, hasEventInfos);
+                    } catch (JSONException e) {
+                        Log.e("postrequest", "Error parsing received JsonObject in get Statistics: " + e.toString());
+                        e.printStackTrace();
                     }
+                }
 
-                    if(callback != null)
-                        callback.OnDataReceived();    //Ensure to call callback
-                }
-                catch (JSONException e) {
-                    Log.e("postrequest", "Error parsing received JsonObject in GetStats().");
-                    e.printStackTrace();
-                }
+                if(callback != null)
+                    callback.OnDataReceived();    //Ensure to call callback
             }
         }, new Response.ErrorListener() { @Override public void onErrorResponse(VolleyError error) {}})
         {
