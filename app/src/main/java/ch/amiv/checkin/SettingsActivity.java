@@ -8,6 +8,7 @@ package ch.amiv.checkin;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.support.v4.math.MathUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -50,7 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
     {
         SHARED_PREFS.edit().putString(URL_PREF_KEY, mUrlField.getText().toString()).apply();
         SHARED_PREFS.edit().putBoolean(AUTO_UPDATE_STATS_PREF_KEY, mAutoRefreshCheck.isChecked()).apply();
-        SHARED_PREFS.edit().putFloat(REFRESH_FREQUENCY_KEY, Float.parseFloat(mRefreshFreqField.getText().toString())).apply();
+        SHARED_PREFS.edit().putFloat(REFRESH_FREQUENCY_KEY, MathUtils.clamp(Float.parseFloat(mRefreshFreqField.getText().toString()), 3f, Float.POSITIVE_INFINITY)).apply();
 
         ReturnToMainActivity();
     }

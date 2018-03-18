@@ -20,6 +20,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
+import android.view.animation.AnimationUtils;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -239,8 +240,11 @@ public class ScanActivity extends AppCompatActivity {
             return;
 
         String s = mLegiInputField.getText().toString();
-        if("".equals(s))
+        if(s.isEmpty())
             return;
+        View submitButton = findViewById(R.id.SubmitLegiNrButton);
+        if(submitButton != null)
+            submitButton.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_pop));
 
         mLegiInputField.setText("");
         ResetResponseUI();
@@ -313,8 +317,9 @@ public class ScanActivity extends AppCompatActivity {
             mResponseLabel.setVisibility(View.VISIBLE);
             mResponseLabel.setText(message);
             mTickImage.setVisibility(View.VISIBLE);
-            mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
             mBGTint.setVisibility(View.VISIBLE);
+            mTickImage.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_grow));
+            mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
 
             if(EventDatabase.instance.eventData.eventType == EventData.EventType.Counter) {
                 mCheckinCountLabel.setVisibility(View.VISIBLE);
@@ -355,6 +360,7 @@ public class ScanActivity extends AppCompatActivity {
             mResponseLabel.setText(responseText);
             mTickImage.setVisibility(View.VISIBLE);
             mTickImage.setColorFilter(getResources().getColor(R.color.colorValid));
+            mTickImage.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_grow));
             mBGTint.setVisibility(View.VISIBLE);
 
 
@@ -376,6 +382,7 @@ public class ScanActivity extends AppCompatActivity {
             mResponseLabel.setVisibility(View.VISIBLE);
             mResponseLabel.setText(R.string.no_internet);
             mCrossImage.setVisibility(View.VISIBLE);
+            mCrossImage.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_grow));
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
         }
@@ -384,6 +391,7 @@ public class ScanActivity extends AppCompatActivity {
             mResponseLabel.setVisibility(View.VISIBLE);
             mResponseLabel.setText(responseText);
             mCrossImage.setVisibility(View.VISIBLE);
+            mCrossImage.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_grow));
             mBGTint.setVisibility(View.VISIBLE);
             mBGTint.setColorFilter(getResources().getColor(R.color.colorInvalid));
 

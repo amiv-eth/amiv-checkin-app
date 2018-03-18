@@ -1,16 +1,17 @@
 package ch.amiv.checkin;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 /**
  * This activity is for displaying the list of signed in members, similar to what is seen in the checkin website in the other amiv checkin project.
@@ -48,6 +49,25 @@ public class MemberListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_member_list);
 
         UpdateList();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_member_list_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    /**
+     * Is used to add the search button to the action bar, as well as onCreateOptionsMenu
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.menuSearch) {
+            StartSearchActivity();
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void InitialiseListView()
@@ -113,5 +133,12 @@ public class MemberListActivity extends AppCompatActivity {
     {
         refreshMemberDB.run();
         AnimateList(view);
+    }
+
+    //====Activity Transitions======
+    private void StartSearchActivity()
+    {
+        Intent intent = new Intent(this, SearchMembersActivity.class);
+        startActivity(intent);
     }
 }

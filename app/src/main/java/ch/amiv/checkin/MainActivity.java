@@ -22,6 +22,8 @@ import com.android.volley.toolbox.Volley;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -69,6 +71,13 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        View logo = findViewById(R.id.LogoImage);
+        if(logo != null) {
+            Animation animation = AnimationUtils.loadAnimation(this, R.anim.item_anim_pop);
+            animation.setDuration(150);
+            logo.startAnimation(animation);
+        }
     }
 
     private void CheckPermissions()
@@ -91,6 +100,9 @@ public class MainActivity extends AppCompatActivity {
     {
         if(vibrator != null)
             vibrator.vibrate(50);
+        View button = findViewById(R.id.SubmitPin);
+        if(button != null)
+            button.startAnimation(AnimationUtils.loadAnimation(this, R.anim.item_anim_pop));
 
         if(mWaitingOnServer || mPinField.getText().toString().isEmpty())  //prevents submitting a second pin while still waiting on the response for the first pin
             return;
