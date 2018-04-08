@@ -21,14 +21,15 @@ public class Member {
     public Member (JSONObject _member)
     {
         serverId    = _member.optString("_id");
-        checkedIn   = _member.optBoolean("checked_in");
         email       = _member.optString("email");
         firstname   = _member.optString("firstname");
         lastname    = _member.optString("lastname");
         legi        = _member.optString("legi");
         membership  = _member.optString("membership");
         nethz       = _member.optString("nethz");
-        checkinCount= _member.optString("count");
+
+        checkedIn   = _member.optBoolean("checked_in");
+        checkinCount= _member.optString("freebies_taken");
         if(checkinCount.isEmpty())
             checkinCount = "-";
     }

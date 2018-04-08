@@ -105,7 +105,10 @@ public class EventDatabase {
                     case Membership:
                         return a.membership.compareTo(b.membership);
                     case Status:
-                        return (b.checkedIn == a.checkedIn ? 0 : (a.checkedIn ? 1 : -1));
+                        if(eventData.checkinType == EventData.CheckinType.InOut)
+                            return (b.checkedIn == a.checkedIn ? 0 : (a.checkedIn ? 1 : -1));
+                        else if(eventData.checkinType == EventData.CheckinType.Counter)
+                            return a.checkinCount.compareTo(b.checkinCount);
                     case Legi:
                         return a.legi.compareTo(b.legi);
                 }

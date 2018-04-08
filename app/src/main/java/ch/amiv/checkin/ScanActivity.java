@@ -482,7 +482,7 @@ public class ScanActivity extends AppCompatActivity {
         //Show hide the checkin toggle depending on the event type
         if(EventDatabase.instance.eventData != null) {
             if (EventDatabase.instance.eventData.checkinType == EventData.CheckinType.Counter)
-                SetCheckInToggle(false);
+                SetCheckInToggle(true); //NB: set to false to hide toggle UI, if it is not wanted
             else
                 SetCheckInToggle(true);
         }

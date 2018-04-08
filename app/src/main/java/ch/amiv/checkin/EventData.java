@@ -31,24 +31,28 @@ public class EventData {
         spots = _spots;
         startTime = _startTime;
 
+        /*
         if(_checkinType .equalsIgnoreCase("counter"))
             checkinType = CheckinType.Counter;
         else if(_checkinType.equalsIgnoreCase("in_out"))
-            checkinType = CheckinType.InOut;
+            checkinType = CheckinType.InOut;*/
 
         return SetEventType(_eventType);
     }
 
     public boolean SetEventType(String s)
     {
+        checkinType = CheckinType.InOut;    //XXX set the checkin type in a better way, get from json or use a fkt to determine it
         if(s.equalsIgnoreCase("AMIV Events"))   //Matches the human readable string in the dropdown on the checkin login website
             eventType = EventType.Event;
         else if(s.equalsIgnoreCase("AMIV PVK"))   //May need to be adjusted to what is given
             eventType = EventType.PVK;
         else if(s.equalsIgnoreCase("AMIV General Assemblies"))
             eventType = EventType.GV;
-        else if(s.equalsIgnoreCase("XXX COUNTER"))
+        else if(s.equalsIgnoreCase("AMIV Freebies")) {
             eventType = EventType.Counter;
+            checkinType = CheckinType.Counter;
+        }
         else {
             eventType = EventType.Unknown;
             Log.d("SetEventType()", "Parsing event type unsuccessful, will attempt to imply event type else restrict functionality.");
