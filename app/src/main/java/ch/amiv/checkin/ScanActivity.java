@@ -27,6 +27,7 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.vision.CameraSource;
 import com.google.android.gms.vision.Detector;
@@ -502,5 +503,18 @@ public class ScanActivity extends AppCompatActivity {
     {
         Intent intent = new Intent(this, MemberListActivity.class);
         startActivity(intent);
+    }
+
+    private static final int BACKBUTTON_REPEAT_TIME = 2000;
+    private static long timeBackPressed;
+
+    @Override
+    public void onBackPressed() {   //Used to press back twice to exit scanning screen, prevent accidental logouts
+        if (timeBackPressed + BACKBUTTON_REPEAT_TIME > System.currentTimeMillis())
+            super.onBackPressed();
+        else
+            Toast.makeText(getBaseContext(), "Press Again To Logout", Toast.LENGTH_SHORT).show();
+
+        timeBackPressed = System.currentTimeMillis();
     }
 }
