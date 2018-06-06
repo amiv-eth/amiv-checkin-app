@@ -1,19 +1,15 @@
 package ch.amiv.checkin;
 
-import android.annotation.TargetApi;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Handler;
 
 /**
  * Created by Roger on 06-Feb-18.

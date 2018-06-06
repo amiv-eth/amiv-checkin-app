@@ -8,11 +8,11 @@ package ch.amiv.checkin;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseArray;
@@ -207,14 +207,20 @@ public class ScanActivity extends AppCompatActivity {
 
                 //Only allow another barcode if: time since the last scan has passed, the barcode is different or the checkmode has changed
                 if(mAllowNextBarcode) {
-                    //Log.d("barcodeDetect", "detected barcode: " + barcodes.valueAt(0).displayValue);
+                    String s = barcodes.valueAt(0).displayValue.toLowerCase();
+                    //Decode the barcode, for emails replace the chosen char with @, as @ cannot be encoded with CODE_39 so we use a replacement, needs to match the generated barcode code
+                    if(s.contains(".")) //All emails have at least one '.'
+                        s = s.replace(' ', '@');    //replace ' ' with '@' as encoded
+
+                    final String value = s;
+                    Log.e("barcodeDetect", "detected barcode: " + value);
 
                     mAllowNextBarcode = false;  //prevent the same barcode being submitted in the next frame until this is set to true again in the postDelayed call
                     mCanClearResponse = false;
 
                     mLegiInputField.post(new Runnable() {    //delay to other thread by using a ui element, as this is in a callback on another thread
                         public void run() {
-                            SubmitLegiNrToServer(barcodes.valueAt(0).displayValue); //submit the legi value to the server on the main thread
+                            SubmitLegiNrToServer(value); //submit the legi value to the server on the main thread
 
                             handler.postDelayed(new Runnable() {    //Creates delay call to only allow scanning again after x seconds
                                 @Override
