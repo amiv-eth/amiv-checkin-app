@@ -69,6 +69,7 @@ dependencies {
 }
 
 play {
+    jsonFile = file('google-play-key.json')
     track = 'production'
     uploadImages = true
     errorOnSizeLimit = true
