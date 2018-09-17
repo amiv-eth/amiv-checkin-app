@@ -1,4 +1,8 @@
-# AMIV Legiscanner for Checkin (Android)
+# amiv Check-in App (Android)
+
+## Notice
+This app is now part of the generic [amiv Android app](https://gitlab.ethz.ch/amiv/amiv-app-android) and has its own branch and java package.
+To continue editing the android version of the check-in app please do so there, in the checkin branch. Please note that it has its own readme there.
 
 ### Summary 
 Android app for scanning legi barcodes and sending to the AMIV checkin server, see [project here](https://gitlab.ethz.ch/amiv/amiv-checkin). 
